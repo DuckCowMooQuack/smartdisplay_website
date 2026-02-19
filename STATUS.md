@@ -17,6 +17,7 @@ Last updated: February 19, 2026
 
 - `smartdisplay.py`
 - `templates/index.html`
+- `templates/upload.html`
 - `requirements.txt`
 - `.env.example`
 - `smartdisplay.service.example`
@@ -28,6 +29,11 @@ Last updated: February 19, 2026
 - Weather units displayed in template now track configured units (`F`, `C`, or `K`).
 - Refresh interval is configurable via `SMARTDISPLAY_REFRESH_SECONDS`.
 - Weather refresh interval is independently configurable via `OPENWEATHER_REFRESH_SECONDS`.
+- Agenda strip can be enabled with `SMARTDISPLAY_AGENDA_ENABLED` and pulls upcoming entries from Google Calendar.
+- Agenda refresh interval is independently configurable via `GOOGLE_CALENDAR_REFRESH_SECONDS`.
+- Events and reminders can come from separate Google Calendar IDs (`GOOGLE_CALENDAR_EVENTS_ID` / `GOOGLE_CALENDAR_REMINDERS_ID`).
+- Google Calendar auth now supports `service_account` mode for private calendars (recommended) and `api_key` mode for public calendars.
+- Optional token-gated upload endpoint is available at `/upload` and can be surfaced via on-screen QR code.
 - External image folders are served through `/images/<filename>` route.
 - Layout and transition are configurable via `SMARTDISPLAY_LAYOUT_MODE` and `SMARTDISPLAY_TRANSITION_MODE`.
 - `postcard_drop` transition animates each new photo as a floating/landing postcard.
@@ -60,6 +66,11 @@ Last updated: February 19, 2026
    - Set `SMARTDISPLAY_IMAGE_DIR` (example: `/home/pi/mnt/gdrive/smartdisplay_data/images/keep`)
    - Set `SMARTDISPLAY_LAYOUT_MODE=single`
    - Set `SMARTDISPLAY_TRANSITION_MODE=postcard_drop_topdown` (or `postcard_drop` / `none`)
+   - Set `SMARTDISPLAY_AGENDA_ENABLED=1`
+   - Set `GOOGLE_CALENDAR_AUTH_MODE=service_account`
+   - Set `GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE`
+   - Set `GOOGLE_CALENDAR_EVENTS_ID` and optional `GOOGLE_CALENDAR_REMINDERS_ID`
+   - Optional: set `SMARTDISPLAY_UPLOAD_ENABLED=1` and `SMARTDISPLAY_UPLOAD_TOKEN` to enable phone uploads by QR
 4. Install/refresh service:
    - `sudo cp smartdisplay.service.example /etc/systemd/system/smartdisplay.service`
    - `sudo systemctl daemon-reload`

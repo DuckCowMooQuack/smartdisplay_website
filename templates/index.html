@@ -114,6 +114,7 @@
     }
 
     .overlay-wrap,
+    .agenda-wrap,
     .filename-wrap {
       position: absolute;
       left: 0;
@@ -126,6 +127,10 @@
 
     .overlay-wrap {
       top: 12px;
+    }
+
+    .agenda-wrap {
+      bottom: 46px;
     }
 
     .filename-wrap {
@@ -153,6 +158,36 @@
       font-size: 1.2em;
       margin-top: 4px;
       letter-spacing: 0.03em;
+    }
+
+    .agenda {
+      width: calc(100% - 24px);
+      max-width: 980px;
+      text-align: center;
+      font-size: 0.88em;
+      line-height: 1.2;
+      padding: 8px 12px;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.34);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-sizing: border-box;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .agenda-sep {
+      opacity: 0.7;
+      margin: 0 7px;
+    }
+
+    .agenda-empty {
+      opacity: 0.84;
+    }
+
+    body[data-text-theme="dark"] .agenda {
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(0, 0, 0, 0.22);
     }
 
     .filename {
@@ -189,9 +224,69 @@
       border-color: rgba(0, 0, 0, 0.22);
     }
 
+    .upload-qr-wrap {
+      position: absolute;
+      top: 18px;
+      right: 14px;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0.08;
+      transform: scale(0.96);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+
+    .upload-qr-card {
+      width: 114px;
+      border-radius: 12px;
+      padding: 8px;
+      box-sizing: border-box;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.36);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    body[data-show-qr="1"] .upload-qr-wrap {
+      opacity: 0.98;
+      transform: scale(1);
+    }
+
+    .upload-qr-card img {
+      width: 96px;
+      height: 96px;
+      display: block;
+      margin: 0 auto 6px;
+      padding: 4px;
+      border-radius: 8px;
+      box-sizing: border-box;
+      background: #fff;
+    }
+
+    .upload-qr-label {
+      font-size: 0.68em;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .upload-qr-target {
+      font-size: 0.58em;
+      margin-top: 2px;
+      opacity: 0.8;
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    body[data-text-theme="dark"] .upload-qr-card {
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(0, 0, 0, 0.22);
+    }
+
     @media (orientation: portrait) {
       .overlay {
         font-size: 1.45em;
+      }
+
+      .agenda {
+        font-size: 0.94em;
       }
 
       .filename {
@@ -209,11 +304,23 @@
         max-width: 65vw;
       }
     }
+
+    @media (max-width: 900px) {
+      .upload-qr-card {
+        width: 102px;
+      }
+
+      .upload-qr-card img {
+        width: 84px;
+        height: 84px;
+      }
+    }
   </style>
 </head>
 <body
   data-text-theme="light"
   data-show-filename="0"
+  data-show-qr="0"
   data-layout-mode="{{ layout_mode }}"
   data-transition-mode="{{ transition_mode }}"
 >
@@ -228,6 +335,32 @@
       <div id="clock">Loading...</div>
     </div>
   </div>
+
+  {% if upload_qr_data_uri %}
+  <div class="upload-qr-wrap">
+    <div class="upload-qr-card">
+      <img src="{{ upload_qr_data_uri }}" alt="Upload photos QR code">
+      <div class="upload-qr-label">Upload Photos</div>
+      {% if upload_display_target %}
+      <div class="upload-qr-target">{{ upload_display_target }}</div>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% if agenda_enabled %}
+  <div class="agenda-wrap">
+    <div class="agenda">
+      {% if agenda_items %}
+        {% for item in agenda_items %}
+          {% if not loop.first %}<span class="agenda-sep">|</span>{% endif %}<span class="agenda-item">{{ item }}</span>
+        {% endfor %}
+      {% else %}
+        <span class="agenda-empty">No upcoming calendar items</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
 
   <div class="filename-wrap">
     <div class="filename">
@@ -493,6 +626,7 @@
     }
 
     var filenameTimer = null;
+    var qrTimer = null;
 
     function showFilenameTemporarily() {
       document.body.setAttribute('data-show-filename', '1');
@@ -502,6 +636,22 @@
       filenameTimer = setTimeout(function () {
         document.body.setAttribute('data-show-filename', '0');
         filenameTimer = null;
+      }, 8000);
+    }
+
+    function showQrTemporarily() {
+      var hasQr = Boolean(document.querySelector('.upload-qr-wrap'));
+      if (!hasQr) {
+        return;
+      }
+
+      document.body.setAttribute('data-show-qr', '1');
+      if (qrTimer) {
+        clearTimeout(qrTimer);
+      }
+      qrTimer = setTimeout(function () {
+        document.body.setAttribute('data-show-qr', '0');
+        qrTimer = null;
       }, 8000);
     }
 
@@ -519,8 +669,13 @@
       runPostcardTopdownTransition(currentImageUrl);
     }
 
-    document.body.addEventListener('click', showFilenameTemporarily, false);
-    document.body.addEventListener('touchstart', showFilenameTemporarily, false);
+    function showTransientOverlayDetails() {
+      showFilenameTemporarily();
+      showQrTemporarily();
+    }
+
+    document.body.addEventListener('click', showTransientOverlayDetails, false);
+    document.body.addEventListener('touchstart', showTransientOverlayDetails, false);
   </script>
 </body>
 </html>
