@@ -1,0 +1,16 @@
+[Unit]
+Description=Smart Display Python Web App
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/smartdisplay_website
+EnvironmentFile=-/home/pi/smartdisplay_website/.env
+ExecStart=/usr/bin/python3 /home/pi/smartdisplay_website/smartdisplay.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

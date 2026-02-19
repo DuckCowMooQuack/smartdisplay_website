@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="{{ refresh_seconds }}">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Smart Display</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: black;
+      {% if image_url %}
+      background: url("{{ image_url }}") no-repeat center center;
+      background-size: contain;
+      {% endif %}
+      font-family: sans-serif;
+      color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(0, 0, 0, 0.45) 0%,
+        rgba(0, 0, 0, 0.12) 35%,
+        rgba(0, 0, 0, 0.45) 100%
+      );
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body[data-text-theme="dark"] {
+      color: #121212;
+      text-shadow: 0 1px 4px rgba(255, 255, 255, 0.8);
+    }
+
+    body[data-text-theme="dark"]::before {
+      background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.45) 0%,
+        rgba(255, 255, 255, 0.12) 35%,
+        rgba(255, 255, 255, 0.45) 100%
+      );
+    }
+
+    .overlay-wrap,
+    .filename-wrap {
+      position: absolute;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .overlay-wrap {
+      top: 12px;
+    }
+
+    .filename-wrap {
+      bottom: 10px;
+    }
+
+    .overlay {
+      width: calc(100% - 24px);
+      max-width: 720px;
+      text-align: center;
+      font-size: 1.3em;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(0, 0, 0, 0.38);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      box-sizing: border-box;
+    }
+
+    body[data-text-theme="dark"] .overlay {
+      background: rgba(255, 255, 255, 0.44);
+      border-color: rgba(0, 0, 0, 0.24);
+    }
+
+    #clock {
+      font-size: 1.2em;
+      margin-top: 4px;
+      letter-spacing: 0.03em;
+    }
+
+    .filename {
+      width: calc(100% - 24px);
+      max-width: 720px;
+      text-align: center;
+      font-size: 0.75em;
+      color: rgba(255, 255, 255, 0.22);
+      opacity: 0.22;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-sizing: border-box;
+      transition: opacity 0.2s ease, color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    body[data-text-theme="dark"] .filename {
+      color: rgba(0, 0, 0, 0.25);
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(0, 0, 0, 0.12);
+    }
+
+    body[data-show-filename="1"] .filename {
+      opacity: 0.92;
+      color: rgba(255, 255, 255, 0.82);
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    body[data-text-theme="dark"][data-show-filename="1"] .filename {
+      color: rgba(0, 0, 0, 0.85);
+      background: rgba(255, 255, 255, 0.38);
+      border-color: rgba(0, 0, 0, 0.22);
+    }
+
+    @media (orientation: portrait) {
+      .overlay {
+        font-size: 1.45em;
+      }
+
+      .filename {
+        font-size: 0.85em;
+      }
+    }
+
+    @media (orientation: landscape) {
+      .overlay {
+        font-size: 1.1em;
+        max-width: 65vw;
+      }
+
+      .filename {
+        max-width: 65vw;
+      }
+    }
+  </style>
+</head>
+<body data-text-theme="light" data-show-filename="0">
+  <div class="overlay-wrap">
+    <div class="overlay">
+      <div>{{ formatted_date }}</div>
+      <div>{{ temp }}°{{ temp_unit }} - {{ description }}</div>
+      <div id="clock">Loading...</div>
+    </div>
+  </div>
+
+  <div class="filename-wrap">
+    <div class="filename">
+      {{ image_name if image_name else "No image available" }}
+    </div>
+  </div>
+
+  <script>
+    function updateClock() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var seconds = now.getSeconds();
+      var ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      var str = hours + ':' + pad(minutes) + ':' + pad(seconds) + ' ' + ampm;
+      document.getElementById('clock').innerHTML = str;
+    }
+
+    function setTextTheme(theme) {
+      document.body.setAttribute('data-text-theme', theme);
+    }
+
+    function sampleImageBrightness(imageUrl, callback) {
+      var img = new Image();
+
+      img.onload = function () {
+        try {
+          var sampleSize = 24;
+          var canvas = document.createElement('canvas');
+          canvas.width = sampleSize;
+          canvas.height = sampleSize;
+
+          var ctx = canvas.getContext('2d');
+          if (!ctx) {
+            callback(null);
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+          var pixels = ctx.getImageData(0, 0, sampleSize, sampleSize).data;
+          var total = 0;
+          var count = 0;
+
+          for (var i = 0; i < pixels.length; i += 4) {
+            var alpha = pixels[i + 3];
+            if (alpha === 0) {
+              continue;
+            }
+
+            var red = pixels[i];
+            var green = pixels[i + 1];
+            var blue = pixels[i + 2];
+            total += (red * 299 + green * 587 + blue * 114) / 1000;
+            count += 1;
+          }
+
+          if (!count) {
+            callback(null);
+            return;
+          }
+
+          callback(total / count);
+        } catch (err) {
+          callback(null);
+        }
+      };
+
+      img.onerror = function () {
+        callback(null);
+      };
+
+      img.src = imageUrl;
+    }
+
+    function applyThemeFromImage(imageUrl) {
+      if (!imageUrl) {
+        setTextTheme('light');
+        return;
+      }
+
+      sampleImageBrightness(imageUrl, function (brightness) {
+        if (brightness === null) {
+          setTextTheme('light');
+          return;
+        }
+
+        if (brightness >= 150) {
+          setTextTheme('dark');
+        } else {
+          setTextTheme('light');
+        }
+      });
+    }
+
+    var filenameTimer = null;
+
+    function showFilenameTemporarily() {
+      document.body.setAttribute('data-show-filename', '1');
+      if (filenameTimer) {
+        clearTimeout(filenameTimer);
+      }
+      filenameTimer = setTimeout(function () {
+        document.body.setAttribute('data-show-filename', '0');
+        filenameTimer = null;
+      }, 8000);
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    applyThemeFromImage({{ image_url | tojson }});
+    document.body.addEventListener('click', showFilenameTemporarily, false);
+    document.body.addEventListener('touchstart', showFilenameTemporarily, false);
+  </script>
+</body>
+</html>

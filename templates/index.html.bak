@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="refresh" content="60">
+  <meta charset="UTF-8">
+  <title>Smart Display</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: url("/static/{{ background }}") no-repeat center center fixed;
+      background-size: contain;
+      background-color: black;
+      font-family: sans-serif;
+      color: grey;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-shadow: 2px 2px 4px #000;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0;
+      text-align: center;
+      font-size: 1.4em;
+    }
+  </style>
+</head>
+<body>
+  <div class="overlay">
+    <div>{{ formatted_date }}</div>
+    <div>{{ temp }}°F - {{ description }}</div>
+    <div id="clock">Loading...</div>
+  </div>
+
+  <script>
+    function updateClock() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var seconds = now.getSeconds();
+      var ampm = hours >= 12 ? 'PM' : 'AM';
+
+      hours = hours % 12;
+      hours = hours ? hours : 12;
+
+      function pad(n) { return (n < 10 ? '0' : '') + n; }
+      var str = hours + ':' + pad(minutes) + ':' + pad(seconds) + ' ' + ampm;
+      document.getElementById('clock').innerHTML = str;
+    }
+
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
