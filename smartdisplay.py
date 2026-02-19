@@ -677,6 +677,17 @@ def render_upload_page(status_message="", status_level="info", token=""):
     )
 
 
+def summarize_filenames(names, limit=4):
+    if not names:
+        return ""
+
+    shown = names[:limit]
+    summary = ", ".join(shown)
+    if len(names) > limit:
+        summary += f" (+{len(names) - limit} more)"
+    return summary
+
+
 @app.route("/images/<path:filename>")
 def serve_external_image(filename):
     if not IMAGE_DIR.is_dir():
@@ -710,38 +721,89 @@ def upload_photo():
     if request.method == "GET":
         return render_upload_page(token=token)
 
-    file = request.files.get("photo")
-    if file is None or not file.filename.strip():
+    files = request.files.getlist("photos")
+    if not files:
+        single_file = request.files.get("photo")
+        if single_file is not None:
+            files = [single_file]
+
+    selected_files = [file for file in files if file is not None and file.filename.strip()]
+    if not selected_files:
         return render_upload_page(
-            status_message="Choose an image before uploading.",
+            status_message="Choose one or more images before uploading.",
             status_level="error",
             token=token,
         ), 400
 
-    destination = build_upload_destination(file.filename)
-    if destination is None:
-        return render_upload_page(
-            status_message=f"Unsupported file type. Allowed: {', '.join(SUPPORTED_IMAGE_EXTENSIONS)}",
-            status_level="error",
-            token=token,
-        ), 400
-
+    uploaded_names = []
+    invalid_names = []
+    failed_names = []
     try:
         IMAGE_DIR.mkdir(parents=True, exist_ok=True)
-        file.save(destination)
     except Exception as exc:
-        app.logger.warning("Upload failed: %s", exc)
+        app.logger.warning("Failed to create image directory for upload: %s", exc)
         return render_upload_page(
             status_message="Upload failed on server.",
             status_level="error",
             token=token,
         ), 500
 
+    for file in selected_files:
+        destination = build_upload_destination(file.filename)
+        if destination is None:
+            invalid_names.append(file.filename.strip() or "(unnamed)")
+            continue
+
+        try:
+            file.save(destination)
+            uploaded_names.append(destination.name)
+        except Exception as exc:
+            app.logger.warning("Upload failed for %s: %s", file.filename, exc)
+            failed_names.append(file.filename.strip() or destination.name)
+
+    if uploaded_names and not invalid_names and not failed_names:
+        count = len(uploaded_names)
+        noun = "photo" if count == 1 else "photos"
+        return render_upload_page(
+            status_message=(
+                f"Uploaded {count} {noun}: {summarize_filenames(uploaded_names)}. "
+                "They will appear automatically on the display."
+            ),
+            status_level="success",
+            token=token,
+        )
+
+    if uploaded_names:
+        details = []
+        details.append(f"Uploaded {len(uploaded_names)}: {summarize_filenames(uploaded_names)}.")
+        if invalid_names:
+            details.append(
+                f"Skipped unsupported type ({len(invalid_names)}): {summarize_filenames(invalid_names)}."
+            )
+        if failed_names:
+            details.append(f"Failed to save ({len(failed_names)}): {summarize_filenames(failed_names)}.")
+        return render_upload_page(
+            status_message=" ".join(details),
+            status_level="warning",
+            token=token,
+        )
+
+    details = []
+    if invalid_names:
+        details.append(
+            f"Unsupported file type ({len(invalid_names)}): {summarize_filenames(invalid_names)}."
+        )
+    if failed_names:
+        details.append(f"Failed to save ({len(failed_names)}): {summarize_filenames(failed_names)}.")
     return render_upload_page(
-        status_message=f"Uploaded {destination.name}. It will appear automatically on the display.",
-        status_level="success",
+        status_message=(
+            "No photos were uploaded. "
+            + " ".join(details)
+            + f" Allowed: {', '.join(SUPPORTED_IMAGE_EXTENSIONS)}"
+        ).strip(),
+        status_level="error",
         token=token,
-    )
+    ), 400
 
 
 @app.errorhandler(413)
@@ -751,7 +813,10 @@ def request_too_large(_exc):
         if token != SMARTDISPLAY_UPLOAD_TOKEN:
             token = ""
         return render_upload_page(
-            status_message=f"File is too large. Max allowed upload size is {SMARTDISPLAY_MAX_UPLOAD_MB} MB.",
+            status_message=(
+                "Upload is too large. "
+                f"Max total upload size per request is {SMARTDISPLAY_MAX_UPLOAD_MB} MB."
+            ),
             status_level="error",
             token=token,
         ), 413

@@ -71,6 +71,12 @@
       color: #ffe5e8;
     }
 
+    .status-warning {
+      background: #433114;
+      border: 1px solid #71531e;
+      color: #fff1d2;
+    }
+
     form {
       display: flex;
       flex-direction: column;
@@ -112,7 +118,7 @@
     <h1>Smart Display Upload</h1>
     <p class="hint">
       Allowed types: {{ allowed_extensions }}<br>
-      Max file size: {{ max_upload_mb }} MB
+      Max total upload size per request: {{ max_upload_mb }} MB
     </p>
 
     {% if status_message %}
@@ -121,15 +127,16 @@
 
     <form method="post" enctype="multipart/form-data">
       <input type="hidden" name="token" value="{{ token }}">
-      <label for="photo">Choose photo</label>
+      <label for="photos">Choose one or more photos</label>
       <input
-        id="photo"
-        name="photo"
+        id="photos"
+        name="photos"
         type="file"
         accept=".jpg,.jpeg,.png,.webp,image/*"
+        multiple
         required
       >
-      <button type="submit">Upload</button>
+      <button type="submit">Upload Photos</button>
     </form>
   </div>
 </body>
