@@ -191,9 +191,13 @@
     }
 
     .filename {
-      width: calc(100% - 24px);
-      max-width: 720px;
+      display: inline-block;
+      width: auto;
+      max-width: calc(100vw - 24px);
       text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       font-size: 0.75em;
       color: rgba(255, 255, 255, 0.22);
       opacity: 0.22;
@@ -226,7 +230,7 @@
 
     .upload-qr-wrap {
       position: absolute;
-      top: 18px;
+      bottom: 12px;
       right: 14px;
       z-index: 1;
       pointer-events: none;
