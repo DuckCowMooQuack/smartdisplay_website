@@ -107,9 +107,9 @@
     body[data-text-theme="dark"]::before {
       background: linear-gradient(
         180deg,
-        rgba(255, 255, 255, 0.45) 0%,
-        rgba(255, 255, 255, 0.12) 35%,
-        rgba(255, 255, 255, 0.45) 100%
+        rgba(255, 255, 255, 0.16) 0%,
+        rgba(255, 255, 255, 0.04) 35%,
+        rgba(255, 255, 255, 0.16) 100%
       );
     }
 
@@ -127,6 +127,7 @@
 
     .overlay-wrap {
       top: 12px;
+      transition: top 0.2s ease;
     }
 
     .agenda-wrap {
@@ -147,6 +148,8 @@
       background: rgba(0, 0, 0, 0.38);
       border: 1px solid rgba(255, 255, 255, 0.22);
       box-sizing: border-box;
+      transform-origin: top center;
+      transition: transform 0.2s ease;
     }
 
     body[data-text-theme="dark"] .overlay {
@@ -339,7 +342,6 @@
       <div id="clock">Loading...</div>
     </div>
   </div>
-
   {% if upload_qr_data_uri %}
   <div class="upload-qr-wrap">
     <div class="upload-qr-card">
@@ -444,7 +446,12 @@
       img.src = imageUrl;
     }
 
-    function applyThemeFromImage(imageUrl) {
+    function applyThemeFromImage(imageUrl, forceLightTheme) {
+      if (forceLightTheme) {
+        setTextTheme('light');
+        return;
+      }
+
       if (!imageUrl) {
         setTextTheme('light');
         return;
@@ -462,6 +469,171 @@
           setTextTheme('light');
         }
       });
+    }
+
+    var DEFAULT_OVERLAY_TOP_PX = 12;
+    var OVERLAY_SAFE_MARGIN_PX = 2;
+    var MIN_OVERLAY_SCALE = 0.4;
+    var overlayLayoutTimer = null;
+    function setOverlayTop(topPx) {
+      var overlayWrap = document.querySelector('.overlay-wrap');
+      if (!overlayWrap) {
+        return;
+      }
+      overlayWrap.style.top = String(Math.round(topPx)) + 'px';
+    }
+
+    function resetOverlayTop() {
+      setOverlayTop(DEFAULT_OVERLAY_TOP_PX);
+    }
+
+    function setOverlayScale(scale) {
+      var overlay = document.querySelector('.overlay');
+      if (!overlay) {
+        return;
+      }
+      overlay.style.transform = 'scale(' + String(scale) + ')';
+    }
+
+    function resetOverlayScale() {
+      setOverlayScale(1);
+    }
+
+    function measureRenderedImageTop(imageUrl, callback) {
+      var photoLayer = document.getElementById('photo-layer');
+      if (!photoLayer || !imageUrl) {
+        callback(null);
+        return;
+      }
+
+      var image = new Image();
+      image.onload = function () {
+        var bounds = photoLayer.getBoundingClientRect();
+        var containerWidth = photoLayer.clientWidth || bounds.width;
+        var containerHeight = photoLayer.clientHeight || bounds.height;
+        var containerTop = photoLayer.offsetTop;
+
+        if ((!containerWidth || !containerHeight) && (!bounds.width || !bounds.height)) {
+          callback(null);
+          return;
+        }
+        if (!image.naturalWidth || !image.naturalHeight) {
+          callback(null);
+          return;
+        }
+
+        if (!containerWidth || !containerHeight) {
+          containerWidth = bounds.width;
+          containerHeight = bounds.height;
+          containerTop = bounds.top;
+        }
+
+        var widthScale = containerWidth / image.naturalWidth;
+        var heightScale = containerHeight / image.naturalHeight;
+        var fitScale = Math.min(widthScale, heightScale);
+        var renderedHeight = image.naturalHeight * fitScale;
+        var topInset = Math.max(0, (containerHeight - renderedHeight) / 2);
+        callback(containerTop + topInset);
+      };
+
+      image.onerror = function () {
+        callback(null);
+      };
+
+      image.src = imageUrl;
+    }
+
+    function placeOverlayInTopBlankSpace(imageUrl, callback) {
+      var overlayWrap = document.querySelector('.overlay-wrap');
+      var overlay = document.querySelector('.overlay');
+      resetOverlayTop();
+      resetOverlayScale();
+
+      if (!overlayWrap || !overlay || !imageUrl) {
+        callback(false);
+        return;
+      }
+
+      measureRenderedImageTop(imageUrl, function (imageTop) {
+        if (imageTop === null) {
+          callback(false);
+          return;
+        }
+
+        var availableBlankHeight = imageTop - OVERLAY_SAFE_MARGIN_PX;
+        if (availableBlankHeight <= 0) {
+          resetOverlayTop();
+          resetOverlayScale();
+          callback(false);
+          return;
+        }
+
+        var baseOverlayHeight = overlay.offsetHeight || overlay.getBoundingClientRect().height;
+        if (!baseOverlayHeight) {
+          resetOverlayTop();
+          resetOverlayScale();
+          callback(false);
+          return;
+        }
+
+        var usableBlankHeight = Math.max(0, availableBlankHeight - 1);
+        var targetScale = 1;
+        if (baseOverlayHeight > usableBlankHeight) {
+          targetScale = usableBlankHeight / baseOverlayHeight;
+        }
+
+        if (targetScale < MIN_OVERLAY_SCALE) {
+          resetOverlayTop();
+          resetOverlayScale();
+          callback(false);
+          return;
+        }
+
+        if (targetScale < 1) {
+          setOverlayScale(targetScale);
+        }
+
+        var overlayHeight = baseOverlayHeight * targetScale;
+        var maxTopInsideBlank = imageTop - overlayHeight - OVERLAY_SAFE_MARGIN_PX;
+        if (maxTopInsideBlank < 0) {
+          // Minor rounding variance on older browsers; treat near-zero as zero.
+          if (maxTopInsideBlank > -2) {
+            maxTopInsideBlank = 0;
+          } else {
+            resetOverlayTop();
+            resetOverlayScale();
+            callback(false);
+            return;
+          }
+        }
+
+        var centeredInBlank = Math.floor((imageTop - overlayHeight) / 2);
+        var targetTop = Math.max(
+          0,
+          Math.min(maxTopInsideBlank, centeredInBlank)
+        );
+        setOverlayTop(targetTop);
+        callback(true);
+      });
+    }
+
+    function refreshOverlayPlacementAndTheme(imageUrl) {
+      placeOverlayInTopBlankSpace(imageUrl, function (overlayInTopBlank) {
+        applyThemeFromImage(imageUrl, overlayInTopBlank);
+      });
+    }
+
+    function queueOverlayPlacementPasses(imageUrl) {
+      refreshOverlayPlacementAndTheme(imageUrl);
+      setTimeout(function () {
+        refreshOverlayPlacementAndTheme(imageUrl);
+      }, 140);
+      setTimeout(function () {
+        refreshOverlayPlacementAndTheme(imageUrl);
+      }, 650);
+      setTimeout(function () {
+        refreshOverlayPlacementAndTheme(imageUrl);
+      }, 1600);
     }
 
     function randomInt(min, max) {
@@ -666,12 +838,21 @@
     var transitionMode = {{ transition_mode | tojson }};
     var photoState = initializePhotoLayers(currentImageUrl);
 
-    applyThemeFromImage(currentImageUrl);
+    queueOverlayPlacementPasses(currentImageUrl);
     if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
       runPostcardDropTransition(currentImageUrl);
     } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
       runPostcardTopdownTransition(currentImageUrl);
     }
+
+    window.addEventListener('resize', function () {
+      if (overlayLayoutTimer) {
+        clearTimeout(overlayLayoutTimer);
+      }
+      overlayLayoutTimer = setTimeout(function () {
+        queueOverlayPlacementPasses(currentImageUrl);
+      }, 120);
+    });
 
     function showTransientOverlayDetails() {
       showFilenameTemporarily();
