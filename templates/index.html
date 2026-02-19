@@ -113,6 +113,19 @@
       );
     }
 
+    body[data-view-mode="ascii_weather"]::before {
+      display: none;
+    }
+
+    body[data-view-mode="ascii_weather"] #photo-underlay-2,
+    body[data-view-mode="ascii_weather"] #photo-underlay-1,
+    body[data-view-mode="ascii_weather"] #photo-layer,
+    body[data-view-mode="ascii_weather"] .overlay-wrap,
+    body[data-view-mode="ascii_weather"] .agenda-wrap,
+    body[data-view-mode="ascii_weather"] .filename-wrap {
+      display: none;
+    }
+
     .overlay-wrap,
     .agenda-wrap,
     .filename-wrap {
@@ -231,18 +244,37 @@
       border-color: rgba(0, 0, 0, 0.22);
     }
 
-    .upload-qr-wrap {
+    .corner-controls {
       position: absolute;
-      bottom: 12px;
       right: 14px;
-      z-index: 1;
-      pointer-events: none;
+      bottom: 12px;
+      z-index: 3;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .upload-qr-wrap,
+    .ascii-toggle-wrap {
       opacity: 0.08;
       transform: scale(0.96);
       transition: opacity 0.2s ease, transform 0.2s ease;
     }
 
-    .upload-qr-card {
+    .upload-qr-wrap {
+      pointer-events: none;
+    }
+
+    body[data-show-qr="1"] .upload-qr-wrap,
+    body[data-show-qr="1"] .ascii-toggle-wrap {
+      opacity: 0.98;
+      transform: scale(1);
+    }
+
+    .upload-qr-card,
+    .ascii-toggle-btn {
       width: 114px;
       border-radius: 12px;
       padding: 8px;
@@ -252,9 +284,31 @@
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
-    body[data-show-qr="1"] .upload-qr-wrap {
-      opacity: 0.98;
-      transform: scale(1);
+    .ascii-toggle-wrap {
+      pointer-events: none;
+    }
+
+    body[data-show-qr="1"] .ascii-toggle-wrap {
+      pointer-events: auto;
+    }
+
+    .ascii-toggle-btn {
+      display: block;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: inherit;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.68em;
+      line-height: 1.2;
+      text-shadow: inherit;
+      cursor: pointer;
+      background: rgba(0, 0, 0, 0.36);
+    }
+
+    .ascii-toggle-btn:focus,
+    .ascii-toggle-btn:active {
+      outline: none;
+      border-color: rgba(255, 255, 255, 0.34);
     }
 
     .upload-qr-card img {
@@ -287,6 +341,86 @@
       border-color: rgba(0, 0, 0, 0.22);
     }
 
+    body[data-text-theme="dark"] .ascii-toggle-btn {
+      background: rgba(255, 255, 255, 0.44);
+      border-color: rgba(0, 0, 0, 0.22);
+      color: rgba(0, 0, 0, 0.84);
+      text-shadow: none;
+    }
+
+    .ascii-weather-view {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      z-index: 2;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      box-sizing: border-box;
+      background: radial-gradient(
+        circle at 50% 22%,
+        rgba(62, 86, 122, 0.74) 0%,
+        rgba(16, 27, 45, 0.9) 55%,
+        rgba(2, 8, 14, 0.98) 100%
+      );
+      text-shadow: none;
+    }
+
+    body[data-view-mode="ascii_weather"] .ascii-weather-view {
+      display: flex;
+    }
+
+    .ascii-weather-card {
+      width: calc(100vw - 24px);
+      max-width: 920px;
+      max-height: calc(100vh - 30px);
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.34);
+      box-sizing: border-box;
+      padding: 10px 12px 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ascii-weather-meta {
+      text-align: center;
+      margin-bottom: 8px;
+      line-height: 1.25;
+    }
+
+    .ascii-weather-title {
+      font-size: 0.95em;
+      letter-spacing: 0.02em;
+    }
+
+    .ascii-weather-hint {
+      font-size: 0.7em;
+      opacity: 0.8;
+      margin-top: 2px;
+    }
+
+    .ascii-weather-scene {
+      margin: 0;
+      font-family: "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.08;
+      letter-spacing: 0.01em;
+      white-space: pre;
+      color: #e9f1ff;
+      overflow: hidden;
+      text-align: left;
+      user-select: none;
+    }
+
+    body[data-view-mode="ascii_weather"] .upload-qr-wrap {
+      display: none;
+    }
+
     @media (orientation: portrait) {
       .overlay {
         font-size: 1.45em;
@@ -317,9 +451,17 @@
         width: 102px;
       }
 
+      .ascii-toggle-btn {
+        width: 102px;
+      }
+
       .upload-qr-card img {
         width: 84px;
         height: 84px;
+      }
+
+      .ascii-weather-scene {
+        font-size: 11px;
       }
     }
   </style>
@@ -328,12 +470,23 @@
   data-text-theme="light"
   data-show-filename="0"
   data-show-qr="0"
+  data-view-mode="photo"
   data-layout-mode="{{ layout_mode }}"
   data-transition-mode="{{ transition_mode }}"
 >
   <div id="photo-underlay-2"></div>
   <div id="photo-underlay-1"></div>
   <div id="photo-layer"></div>
+
+  <div id="ascii-weather-view" class="ascii-weather-view">
+    <div class="ascii-weather-card">
+      <div class="ascii-weather-meta">
+        <div id="ascii-weather-title" class="ascii-weather-title">ASCII Weather</div>
+        <div id="ascii-weather-hint" class="ascii-weather-hint">Tap to reveal controls, then tap again to switch back.</div>
+      </div>
+      <pre id="ascii-weather-scene" class="ascii-weather-scene"></pre>
+    </div>
+  </div>
 
   <div class="overlay-wrap">
     <div class="overlay">
@@ -342,17 +495,23 @@
       <div id="clock">Loading...</div>
     </div>
   </div>
-  {% if upload_qr_data_uri %}
-  <div class="upload-qr-wrap">
-    <div class="upload-qr-card">
-      <img src="{{ upload_qr_data_uri }}" alt="Upload photos QR code">
-      <div class="upload-qr-label">Upload Photos</div>
-      {% if upload_display_target %}
-      <div class="upload-qr-target">{{ upload_display_target }}</div>
-      {% endif %}
+
+  <div class="corner-controls">
+    <div class="ascii-toggle-wrap">
+      <button id="ascii-weather-toggle" class="ascii-toggle-btn" type="button">ASCII Weather</button>
     </div>
+    {% if upload_qr_data_uri %}
+    <div class="upload-qr-wrap">
+      <div class="upload-qr-card">
+        <img src="{{ upload_qr_data_uri }}" alt="Upload photos QR code">
+        <div class="upload-qr-label">Upload Photos</div>
+        {% if upload_display_target %}
+        <div class="upload-qr-target">{{ upload_display_target }}</div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
   </div>
-  {% endif %}
 
   {% if agenda_enabled %}
   <div class="agenda-wrap">
@@ -618,6 +777,9 @@
     }
 
     function refreshOverlayPlacementAndTheme(imageUrl) {
+      if (currentViewMode === 'ascii_weather') {
+        return;
+      }
       placeOverlayInTopBlankSpace(imageUrl, function (overlayInTopBlank) {
         applyThemeFromImage(imageUrl, overlayInTopBlank);
       });
@@ -803,6 +965,12 @@
 
     var filenameTimer = null;
     var qrTimer = null;
+    var asciiWeatherAnimationTimer = null;
+    var asciiWeatherFrame = 0;
+    var currentViewMode = 'photo';
+    var VIEW_MODE_STORAGE_KEY = 'smartdisplay_view_mode';
+    var VIEW_MODE_PHOTO = 'photo';
+    var VIEW_MODE_ASCII_WEATHER = 'ascii_weather';
 
     function showFilenameTemporarily() {
       document.body.setAttribute('data-show-filename', '1');
@@ -816,11 +984,6 @@
     }
 
     function showQrTemporarily() {
-      var hasQr = Boolean(document.querySelector('.upload-qr-wrap'));
-      if (!hasQr) {
-        return;
-      }
-
       document.body.setAttribute('data-show-qr', '1');
       if (qrTimer) {
         clearTimeout(qrTimer);
@@ -831,21 +994,293 @@
       }, 8000);
     }
 
+    function normalizeViewMode(viewMode) {
+      if (viewMode === VIEW_MODE_ASCII_WEATHER) {
+        return VIEW_MODE_ASCII_WEATHER;
+      }
+      return VIEW_MODE_PHOTO;
+    }
+
+    function getStoredViewMode() {
+      try {
+        var rawMode = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+        return normalizeViewMode(rawMode);
+      } catch (err) {
+        return VIEW_MODE_PHOTO;
+      }
+    }
+
+    function setStoredViewMode(viewMode) {
+      try {
+        window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, normalizeViewMode(viewMode));
+      } catch (err) {
+        // Ignore storage failures on older browsers.
+      }
+    }
+
+    function classifyWeatherType(description) {
+      var weatherText = String(description || '').toLowerCase();
+      if (weatherText.indexOf('snow') !== -1 || weatherText.indexOf('sleet') !== -1 || weatherText.indexOf('ice') !== -1) {
+        return 'snow';
+      }
+      if (weatherText.indexOf('rain') !== -1 || weatherText.indexOf('drizzle') !== -1) {
+        return 'rain';
+      }
+      if (weatherText.indexOf('thunder') !== -1 || weatherText.indexOf('storm') !== -1) {
+        return 'storm';
+      }
+      if (weatherText.indexOf('cloud') !== -1 || weatherText.indexOf('mist') !== -1 || weatherText.indexOf('fog') !== -1 || weatherText.indexOf('haze') !== -1) {
+        return 'clouds';
+      }
+      if (weatherText.indexOf('clear') !== -1 || weatherText.indexOf('sun') !== -1) {
+        return 'clear';
+      }
+      return 'default';
+    }
+
+    function getAsciiSkyLines(weatherType, frameIndex) {
+      var frame = frameIndex % 2;
+      if (weatherType === 'snow') {
+        if (frame === 0) {
+          return [
+            '   *      *         *       *        *       *    ',
+            '      *       *         *      *         *        ',
+            '   *      .--.       *        .--.        *       ',
+            '      *  (    ).   *       * (    ).   *          ',
+            '   *    (___.__)__)     *    (___.__)__)      *   ',
+            '      *      *      *      *      *       *       '
+          ];
+        }
+        return [
+          '      *        *      *       *         *       *  ',
+          '   *      *        *      *        *         *     ',
+          '      *    .--.        *      .--.       *         ',
+          '   *      (    ).    *      (    ).    *       *   ',
+          '      *  (___.__)__)    *  (___.__)__)      *      ',
+          '   *       *      *       *      *      *          '
+        ];
+      }
+
+      if (weatherType === 'rain') {
+        if (frame === 0) {
+          return [
+            '      .-.        .-.         .-.        .-.        ',
+            '     (   ).     (   ).      (   ).     (   ).      ',
+            '    (___(__)   (___(__)    (___(__)   (___(__)     ',
+            '    // // //   // // //    // // //   // // //     ',
+            '   // // //   // // //    // // //   // // //      ',
+            '   // // //  // // //    // // //   // // //       '
+          ];
+        }
+        return [
+          '        .-.         .-.        .-.         .-.      ',
+          '       (   ).      (   ).     (   ).      (   ).    ',
+          '      (___(__)    (___(__)   (___(__)    (___(__)   ',
+          '      \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    ',
+          '     \\\\ \\\\ \\\\     \\\\ \\\\ \\\\   \\\\ \\\\ \\\\     \\\\ \\\\ \\\\     ',
+          '      \\\\ \\\\ \\\\   \\\\ \\\\ \\\\     \\\\ \\\\ \\\\   \\\\ \\\\ \\\\      '
+        ];
+      }
+
+      if (weatherType === 'storm') {
+        if (frame === 0) {
+          return [
+            '      .-.        .-.        .-.        .-.         ',
+            '     (   ).     (   ).     (   ).     (   ).        ',
+            '    (___(__)   (___(__)   (___(__)   (___(__)       ',
+            '     /// ///    /// ///    /// ///    /// ///       ',
+            '        / /        / /        / /        / /        ',
+            '       /_/        /_/        /_/        /_/         '
+          ];
+        }
+        return [
+          '       .-.         .-.         .-.        .-.        ',
+          '      (   ).      (   ).      (   ).     (   ).      ',
+          '     (___(__)    (___(__)    (___(__)   (___(__)     ',
+          '      \\\\ \\\\ \\\\     \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    \\\\ \\\\ \\\\    ',
+          '         /_/         /_/         /_/        /_/      ',
+          '         \\ \\         \\ \\         \\ \\        \\ \\      '
+        ];
+      }
+
+      if (weatherType === 'clouds') {
+        if (frame === 0) {
+          return [
+            '                 .--.             .--.              ',
+            '              .-(    ).        .-(    ).            ',
+            '             (___.__)__)      (___.__)__)           ',
+            '            .--.      .--.      .--.                ',
+            '         .-(    ). .-(    ). .-(    ).              ',
+            '        (___.__)_)(___.__)_)(___.__)__)             '
+          ];
+        }
+        return [
+          '               .--.             .--.                ',
+          '            .-(    ).        .-(    ).              ',
+          '           (___.__)__)      (___.__)__)             ',
+          '              .--.      .--.      .--.              ',
+          '           .-(    ). .-(    ). .-(    ).            ',
+          '          (___.__)_)(___.__)_)(___.__)__)           '
+        ];
+      }
+
+      if (weatherType === 'clear') {
+        if (frame === 0) {
+          return [
+            '                       \\  |  /                      ',
+            '                     `. \\ | / .`                    ',
+            '                   ---  .-*- .  ---                 ',
+            '                     . / | \\ .                      ',
+            '                       /  |  \\                      ',
+            '                 ~                 ~                '
+          ];
+        }
+        return [
+          '                        \\ | /                       ',
+          '                      `. \\|/ .`                     ',
+          '                    ---  .*.  ---                   ',
+          '                      . /|\\ .                       ',
+          '                        / | \\                       ',
+          '               ~                    ~               '
+        ];
+      }
+
+      return [
+        '                     .--.                           ',
+        '                  .-(    ).                         ',
+        '                 (___.__)__)                        ',
+        '                                                    ',
+        '                 .-.                                ',
+        '                (   )                               '
+      ];
+    }
+
+    function getAsciiHouseLines() {
+      return [
+        '                                                    ',
+        '                      /\\                            ',
+        '                     /  \\                           ',
+        '                    /____\\                          ',
+        '                   /| [] |\\                         ',
+        '                    |    |                          ',
+        '                 ___|_[]_|___                       ',
+        '                |            |                      ',
+        '                |  SMART     |                      ',
+        '                |  HOME      |                      ',
+        '                |____________|                      ',
+        '             ___/_____/\\_____\\___                  ',
+        '            /____________________\\                 ',
+        '          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~             '
+      ];
+    }
+
+    function renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit) {
+      var titleNode = document.getElementById('ascii-weather-title');
+      var hintNode = document.getElementById('ascii-weather-hint');
+      var sceneNode = document.getElementById('ascii-weather-scene');
+      if (!sceneNode) {
+        return;
+      }
+
+      var weatherType = classifyWeatherType(weatherDescription);
+      var skyLines = getAsciiSkyLines(weatherType, asciiWeatherFrame);
+      var houseLines = getAsciiHouseLines();
+      sceneNode.textContent = skyLines.concat(houseLines).join('\n');
+
+      if (titleNode) {
+        var weatherLabel = weatherDescription ? String(weatherDescription) : 'Weather unavailable';
+        var unitLabel = weatherUnit ? String(weatherUnit) : '';
+        var tempLabel = weatherTemp === null || weatherTemp === undefined ? '--' : String(weatherTemp);
+        var tempText = tempLabel === '--' ? '--' : tempLabel + '°' + unitLabel;
+        titleNode.textContent = tempText + ' - ' + weatherLabel;
+      }
+      if (hintNode) {
+        hintNode.textContent = 'Tap once to reveal controls, then tap "Show Photos" to return.';
+      }
+    }
+
+    function startAsciiWeatherAnimation(weatherDescription, weatherTemp, weatherUnit) {
+      stopAsciiWeatherAnimation();
+      asciiWeatherFrame = 0;
+      renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit);
+      asciiWeatherAnimationTimer = setInterval(function () {
+        asciiWeatherFrame = (asciiWeatherFrame + 1) % 2;
+        renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit);
+      }, 1200);
+    }
+
+    function stopAsciiWeatherAnimation() {
+      if (asciiWeatherAnimationTimer) {
+        clearInterval(asciiWeatherAnimationTimer);
+        asciiWeatherAnimationTimer = null;
+      }
+    }
+
+    function updateAsciiToggleButtonLabel(viewMode) {
+      var button = document.getElementById('ascii-weather-toggle');
+      if (!button) {
+        return;
+      }
+      if (viewMode === VIEW_MODE_ASCII_WEATHER) {
+        button.textContent = 'Show Photos';
+      } else {
+        button.textContent = 'ASCII Weather';
+      }
+    }
+
+    function setViewMode(viewMode, options) {
+      var config = options || {};
+      var normalizedMode = normalizeViewMode(viewMode);
+      currentViewMode = normalizedMode;
+      document.body.setAttribute('data-view-mode', normalizedMode);
+      updateAsciiToggleButtonLabel(normalizedMode);
+
+      if (normalizedMode === VIEW_MODE_ASCII_WEATHER) {
+        if (overlayLayoutTimer) {
+          clearTimeout(overlayLayoutTimer);
+          overlayLayoutTimer = null;
+        }
+        setTextTheme('light');
+        startAsciiWeatherAnimation(currentWeatherDescription, currentWeatherTemp, currentWeatherTempUnit);
+      } else {
+        stopAsciiWeatherAnimation();
+        queueOverlayPlacementPasses(currentImageUrl);
+      }
+
+      if (!config.skipPersist) {
+        setStoredViewMode(normalizedMode);
+      }
+    }
+
+    function showTransientOverlayDetails() {
+      showFilenameTemporarily();
+      showQrTemporarily();
+    }
+
     setInterval(updateClock, 1000);
     updateClock();
 
+    var currentWeatherDescription = {{ description | tojson }};
+    var currentWeatherTemp = {{ temp | tojson }};
+    var currentWeatherTempUnit = {{ temp_unit | tojson }};
     var currentImageUrl = {{ image_url | tojson }};
     var transitionMode = {{ transition_mode | tojson }};
     var photoState = initializePhotoLayers(currentImageUrl);
 
-    queueOverlayPlacementPasses(currentImageUrl);
-    if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
-      runPostcardDropTransition(currentImageUrl);
-    } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
-      runPostcardTopdownTransition(currentImageUrl);
+    var initialViewMode = getStoredViewMode();
+    setViewMode(initialViewMode, { skipPersist: true });
+    if (currentViewMode === VIEW_MODE_PHOTO) {
+      if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
+        runPostcardDropTransition(currentImageUrl);
+      } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
+        runPostcardTopdownTransition(currentImageUrl);
+      }
     }
 
     window.addEventListener('resize', function () {
+      if (currentViewMode !== VIEW_MODE_PHOTO) {
+        return;
+      }
       if (overlayLayoutTimer) {
         clearTimeout(overlayLayoutTimer);
       }
@@ -854,9 +1289,20 @@
       }, 120);
     });
 
-    function showTransientOverlayDetails() {
-      showFilenameTemporarily();
-      showQrTemporarily();
+    var asciiToggleButton = document.getElementById('ascii-weather-toggle');
+    if (asciiToggleButton) {
+      asciiToggleButton.addEventListener('click', function (event) {
+        if (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        if (currentViewMode === VIEW_MODE_ASCII_WEATHER) {
+          setViewMode(VIEW_MODE_PHOTO);
+        } else {
+          setViewMode(VIEW_MODE_ASCII_WEATHER);
+        }
+        showTransientOverlayDetails();
+      }, false);
     }
 
     document.body.addEventListener('click', showTransientOverlayDetails, false);

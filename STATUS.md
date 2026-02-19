@@ -1,6 +1,6 @@
 # Smart Display Status
 
-Last updated: February 19, 2026
+Last updated: February 19, 2026 (evening)
 
 ## Current State
 
@@ -45,6 +45,11 @@ Last updated: February 19, 2026
 - Background image rendering no longer uses `background-attachment: fixed` to avoid old Android zoom/render glitches.
 - Filename label is intentionally low-visibility by default and becomes readable for 8 seconds when the screen is tapped.
 - `/favicon.ico` is handled explicitly and returns HTTP 204 to avoid recurring 404 log noise.
+- Top weather/date/time overlay now attempts to fit inside top blank (letterboxed) space above the rendered photo when available, and falls back to default top placement when no top blank exists.
+- Temporary on-screen overlay debug readout was removed after validation.
+- Bright-image washout was reduced by lowering the bright-theme veil intensity.
+- Bottom-right controls now include a hidden/tap-revealed `ASCII Weather` button.
+- `ASCII Weather` toggles between photo mode and a full-screen ASCII weather scene (based on current weather description) and remembers the chosen mode via browser localStorage.
 
 ## Local Test Result (Known Good)
 
@@ -54,8 +59,11 @@ Last updated: February 19, 2026
 
 ## Pi Deployment Next Steps
 
-1. Sync folder to Pi:
-   - `rsync -av --delete /home/mmallard/smartdisplay_website_rewrite/ pi:/home/pi/smartdisplay_website/`
+1. Sync code to Pi (safe patterns, no delete):
+   - Single-file update (most common for UI tweaks):
+     - `rsync -av --progress templates/index.html pi@raspberrypi:~/smartdisplay_website/templates/index.html`
+   - Full project update while preserving Pi-local secrets:
+     - `rsync -av --progress --exclude '.env' --exclude '*.json' /home/mmallard/smartdisplay_website_rewrite/ pi@raspberrypi:/home/pi/smartdisplay_website/`
 2. Install deps on Pi:
    - `cd /home/pi/smartdisplay_website`
    - `python3 -m pip install --user -r requirements.txt`
@@ -83,3 +91,4 @@ Last updated: February 19, 2026
 
 - Ask to open `STATUS.md` first for project context before making new changes.
 - If weather fails but app still loads, check Pi DNS/network connectivity.
+- User confirmed ASCII weather toggle feature works and wants visual polish tweaks in the next session.
