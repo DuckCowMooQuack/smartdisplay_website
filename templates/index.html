@@ -15,11 +15,7 @@
     body {
       margin: 0;
       min-height: 100%;
-      background-color: black;
-      {% if image_url %}
-      background: url("{{ image_url }}") no-repeat center center;
-      background-size: contain;
-      {% endif %}
+      background-color: #000;
       font-family: sans-serif;
       color: #f4f4f4;
       display: flex;
@@ -46,6 +42,61 @@
       );
       z-index: 0;
       pointer-events: none;
+    }
+
+    #photo-underlay-2,
+    #photo-underlay-1,
+    #photo-layer {
+      position: absolute;
+      top: 3.8vh;
+      right: 3.6vw;
+      bottom: 3.8vh;
+      left: 3.6vw;
+      background-color: transparent;
+      background-repeat: no-repeat;
+      background-position: center center;
+      background-size: contain;
+      transform-origin: center center;
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+      border: 0;
+      border-radius: 4px;
+      opacity: 1;
+    }
+
+    #photo-underlay-2 {
+      z-index: -3;
+      opacity: 0.34;
+      transform: translate(-4.2vw, 2.1vh) rotate(-7deg) scale(0.955);
+    }
+
+    #photo-underlay-1 {
+      z-index: -2;
+      opacity: 0.52;
+      transform: translate(3.6vw, -1.7vh) rotate(6deg) scale(0.972);
+    }
+
+    #photo-layer {
+      z-index: -1;
+      opacity: 1;
+      transform: none;
+    }
+
+    body[data-transition-mode="none"] #photo-underlay-2,
+    body[data-transition-mode="none"] #photo-underlay-1 {
+      display: none;
+    }
+
+    body[data-transition-mode="none"] #photo-layer {
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      border-radius: 0;
+      border: 0;
+      box-shadow: none;
+      background-color: transparent;
+      opacity: 1;
+      transform: none !important;
     }
 
     body[data-text-theme="dark"] {
@@ -160,7 +211,16 @@
     }
   </style>
 </head>
-<body data-text-theme="light" data-show-filename="0">
+<body
+  data-text-theme="light"
+  data-show-filename="0"
+  data-layout-mode="{{ layout_mode }}"
+  data-transition-mode="{{ transition_mode }}"
+>
+  <div id="photo-underlay-2"></div>
+  <div id="photo-underlay-1"></div>
+  <div id="photo-layer"></div>
+
   <div class="overlay-wrap">
     <div class="overlay">
       <div>{{ formatted_date }}</div>
@@ -267,6 +327,171 @@
       });
     }
 
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function setPhotoLayerImage(element, imageUrl) {
+      if (!element) {
+        return;
+      }
+
+      if (imageUrl) {
+        element.style.backgroundImage = 'url("' + imageUrl + '")';
+      } else {
+        element.style.backgroundImage = 'none';
+      }
+    }
+
+    function getStoredImageHistory(storageKey) {
+      try {
+        var raw = window.localStorage.getItem(storageKey);
+        if (!raw) {
+          return [];
+        }
+
+        var parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) {
+          return [];
+        }
+
+        var cleaned = [];
+        for (var i = 0; i < parsed.length; i += 1) {
+          if (typeof parsed[i] === 'string' && parsed[i].length > 0) {
+            cleaned.push(parsed[i]);
+          }
+        }
+        return cleaned;
+      } catch (err) {
+        return [];
+      }
+    }
+
+    function setStoredImageHistory(storageKey, history) {
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(history));
+      } catch (err) {
+        // Ignore storage failures on older browsers.
+      }
+    }
+
+    function initializePhotoLayers(currentImageUrl) {
+      var photoUnderlay2 = document.getElementById('photo-underlay-2');
+      var photoUnderlay1 = document.getElementById('photo-underlay-1');
+      var photoLayer = document.getElementById('photo-layer');
+      var storageKey = 'smartdisplay_image_history';
+      var history = getStoredImageHistory(storageKey);
+      var previousImageUrl = null;
+      var secondPreviousImageUrl = null;
+      var i;
+
+      for (i = 0; i < history.length; i += 1) {
+        if (!previousImageUrl && history[i] !== currentImageUrl) {
+          previousImageUrl = history[i];
+          continue;
+        }
+        if (previousImageUrl && !secondPreviousImageUrl && history[i] !== currentImageUrl && history[i] !== previousImageUrl) {
+          secondPreviousImageUrl = history[i];
+          break;
+        }
+      }
+
+      if (!currentImageUrl) {
+        setPhotoLayerImage(photoUnderlay1, previousImageUrl);
+        setPhotoLayerImage(photoUnderlay2, secondPreviousImageUrl || previousImageUrl);
+        setPhotoLayerImage(photoLayer, null);
+        return { hasCurrentImage: false, hasPreviousImage: Boolean(previousImageUrl) };
+      }
+
+      setPhotoLayerImage(photoUnderlay1, previousImageUrl || currentImageUrl);
+      setPhotoLayerImage(photoUnderlay2, secondPreviousImageUrl || previousImageUrl || currentImageUrl);
+      setPhotoLayerImage(photoLayer, currentImageUrl);
+
+      var nextHistory = [currentImageUrl];
+      for (i = 0; i < history.length; i += 1) {
+        if (history[i] !== currentImageUrl) {
+          nextHistory.push(history[i]);
+        }
+        if (nextHistory.length >= 4) {
+          break;
+        }
+      }
+      setStoredImageHistory(storageKey, nextHistory);
+
+      return { hasCurrentImage: true, hasPreviousImage: Boolean(previousImageUrl) };
+    }
+
+    function runPostcardDropTransition(imageUrl) {
+      var photoLayer = document.getElementById('photo-layer');
+      if (!photoLayer || !imageUrl) {
+        return;
+      }
+
+      var screenWidth = window.innerWidth || 800;
+      var screenHeight = window.innerHeight || 1280;
+      var startX = randomInt(Math.round(-0.16 * screenWidth), Math.round(0.16 * screenWidth));
+      var endX = randomInt(Math.round(-0.06 * screenWidth), Math.round(0.06 * screenWidth));
+      var startY = randomInt(Math.round(-0.32 * screenHeight), Math.round(-0.2 * screenHeight));
+      var startRotate = randomInt(-10, 10);
+      var settleRotate = randomInt(-8, 8);
+      var endScale = randomInt(94, 98) / 100;
+      var durationMs = randomInt(1200, 1700);
+
+      photoLayer.style.transition = 'none';
+      photoLayer.style.opacity = '0';
+      photoLayer.style.boxShadow = '0 14px 34px rgba(0, 0, 0, 0.55)';
+      photoLayer.style.transform =
+        'translate(' + startX + 'px, ' + startY + 'px) rotate(' + startRotate + 'deg) scale(0.9)';
+
+      void photoLayer.offsetWidth;
+
+      setTimeout(function () {
+        photoLayer.style.transition =
+          'transform ' + durationMs + 'ms cubic-bezier(0.12, 0.79, 0.2, 1), ' +
+          'opacity 420ms ease-out, box-shadow ' + durationMs + 'ms ease-out';
+        photoLayer.style.opacity = '1';
+        photoLayer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.3)';
+        photoLayer.style.transform =
+          'translate(' + endX + 'px, 0px) rotate(' + settleRotate + 'deg) scale(' + endScale + ')';
+      }, 35);
+    }
+
+    function runPostcardTopdownTransition(imageUrl) {
+      var photoLayer = document.getElementById('photo-layer');
+      if (!photoLayer || !imageUrl) {
+        return;
+      }
+
+      var screenWidth = window.innerWidth || 800;
+      var screenHeight = window.innerHeight || 1280;
+      var startX = randomInt(Math.round(-0.05 * screenWidth), Math.round(0.05 * screenWidth));
+      var endX = randomInt(Math.round(-0.05 * screenWidth), Math.round(0.05 * screenWidth));
+      var startY = randomInt(Math.round(-0.03 * screenHeight), Math.round(0.03 * screenHeight));
+      var startScale = randomInt(112, 126) / 100;
+      var endRotate = randomInt(-8, 8);
+      var startRotate = endRotate + randomInt(-6, 6);
+      var endScale = randomInt(95, 99) / 100;
+      var durationMs = randomInt(950, 1450);
+
+      photoLayer.style.transition = 'none';
+      photoLayer.style.opacity = '0';
+      photoLayer.style.boxShadow = '0 30px 58px rgba(0, 0, 0, 0.55)';
+      photoLayer.style.transform =
+        'translate(' + startX + 'px, ' + startY + 'px) rotate(' + startRotate + 'deg) scale(' + startScale + ')';
+
+      void photoLayer.offsetWidth;
+
+      setTimeout(function () {
+        photoLayer.style.transition =
+          'transform ' + durationMs + 'ms cubic-bezier(0.16, 0.78, 0.2, 1), ' +
+          'opacity 360ms ease-out, box-shadow ' + durationMs + 'ms ease-out';
+        photoLayer.style.opacity = '1';
+        photoLayer.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.28)';
+        photoLayer.style.transform =
+          'translate(' + endX + 'px, 0px) rotate(' + endRotate + 'deg) scale(' + endScale + ')';
+      }, 35);
+    }
+
     var filenameTimer = null;
 
     function showFilenameTemporarily() {
@@ -283,7 +508,17 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    applyThemeFromImage({{ image_url | tojson }});
+    var currentImageUrl = {{ image_url | tojson }};
+    var transitionMode = {{ transition_mode | tojson }};
+    var photoState = initializePhotoLayers(currentImageUrl);
+
+    applyThemeFromImage(currentImageUrl);
+    if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
+      runPostcardDropTransition(currentImageUrl);
+    } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
+      runPostcardTopdownTransition(currentImageUrl);
+    }
+
     document.body.addEventListener('click', showFilenameTemporarily, false);
     document.body.addEventListener('touchstart', showFilenameTemporarily, false);
   </script>

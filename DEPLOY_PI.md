@@ -24,6 +24,9 @@ Edit `.env` and set:
 
 - `OPENWEATHER_API_KEY`
 - `SMARTDISPLAY_IMAGE_DIR` (for example `/home/pi/mnt/gdrive/smartdisplay_data/images/keep`)
+- `OPENWEATHER_REFRESH_SECONDS` (for example `900` for 15-minute weather updates)
+- `SMARTDISPLAY_LAYOUT_MODE` (`single`)
+- `SMARTDISPLAY_TRANSITION_MODE` (`none`, `postcard_drop`, or `postcard_drop_topdown`)
 
 ## 4. Install/update systemd service
 

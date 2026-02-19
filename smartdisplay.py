@@ -2,6 +2,8 @@ from datetime import datetime
 from pathlib import Path
 import os
 import random
+import threading
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -25,11 +27,26 @@ def env_int(name, default):
         return default
 
 
+def env_choice(name, default, supported_values):
+    value = os.getenv(name, default).strip().lower() or default
+    if value not in supported_values:
+        app.logger.warning(
+            "Invalid value for %s=%r, using %s (allowed: %s)",
+            name,
+            value,
+            default,
+            ", ".join(sorted(supported_values)),
+        )
+        return default
+    return value
+
+
 OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY", "").strip()
 ZIP_CODE = os.getenv("OPENWEATHER_ZIP_CODE", "68164").strip()
 COUNTRY_CODE = os.getenv("OPENWEATHER_COUNTRY_CODE", "us").strip()
 WEATHER_UNITS = os.getenv("OPENWEATHER_UNITS", "imperial").strip() or "imperial"
 WEATHER_TIMEOUT_SECONDS = env_int("OPENWEATHER_TIMEOUT_SECONDS", 10)
+WEATHER_REFRESH_SECONDS = max(0, env_int("OPENWEATHER_REFRESH_SECONDS", 900))
 
 IMAGE_DIR = Path(
     os.getenv(
@@ -38,6 +55,12 @@ IMAGE_DIR = Path(
     )
 ).expanduser()
 REFRESH_SECONDS = env_int("SMARTDISPLAY_REFRESH_SECONDS", 60)
+LAYOUT_MODE = env_choice("SMARTDISPLAY_LAYOUT_MODE", "single", {"single"})
+TRANSITION_MODE = env_choice(
+    "SMARTDISPLAY_TRANSITION_MODE",
+    "none",
+    {"none", "postcard_drop", "postcard_drop_topdown"},
+)
 HOST = os.getenv("SMARTDISPLAY_HOST", "0.0.0.0")
 PORT = env_int("SMARTDISPLAY_PORT", 5000)
 
@@ -48,10 +71,52 @@ elif WEATHER_UNITS == "imperial":
 else:
     TEMP_UNIT = "K"
 
+WEATHER_CACHE_LOCK = threading.Lock()
+WEATHER_CACHE = {
+    "fetched_at": None,
+    "temp": "--",
+    "description": "Weather unavailable",
+}
+
+
+def get_any_cached_weather():
+    with WEATHER_CACHE_LOCK:
+        if WEATHER_CACHE["fetched_at"] is None:
+            return None
+        return WEATHER_CACHE["temp"], WEATHER_CACHE["description"]
+
+
+def get_fresh_cached_weather(now):
+    if WEATHER_REFRESH_SECONDS <= 0:
+        return None
+
+    with WEATHER_CACHE_LOCK:
+        fetched_at = WEATHER_CACHE["fetched_at"]
+        if fetched_at is None:
+            return None
+        if now - fetched_at >= WEATHER_REFRESH_SECONDS:
+            return None
+        return WEATHER_CACHE["temp"], WEATHER_CACHE["description"]
+
+
+def set_weather_cache(temp, description, fetched_at):
+    with WEATHER_CACHE_LOCK:
+        WEATHER_CACHE["temp"] = temp
+        WEATHER_CACHE["description"] = description
+        WEATHER_CACHE["fetched_at"] = fetched_at
+
 
 def get_weather():
+    now = time.time()
+    fresh_cached = get_fresh_cached_weather(now)
+    if fresh_cached is not None:
+        return fresh_cached
+
     if not OPENWEATHER_API_KEY:
         app.logger.warning("OPENWEATHER_API_KEY is not set, using fallback weather values")
+        cached = get_any_cached_weather()
+        if cached is not None:
+            return cached
         return "--", "Weather unavailable"
 
     params = {
@@ -70,9 +135,15 @@ def get_weather():
         data = response.json()
         temp = int(round(float(data["main"]["temp"])))
         description = data["weather"][0]["main"]
+        set_weather_cache(temp, description, now)
         return temp, description
     except Exception as exc:
         app.logger.warning("Weather lookup failed: %s", exc)
+        cached = get_any_cached_weather()
+        if cached is not None:
+            # Keep stale weather if lookup fails and retry later.
+            set_weather_cache(cached[0], cached[1], now)
+            return cached
         return "--", "Weather unavailable"
 
 
@@ -130,6 +201,8 @@ def index():
         image_name=image_name,
         image_url=image_url,
         refresh_seconds=REFRESH_SECONDS,
+        layout_mode=LAYOUT_MODE,
+        transition_mode=TRANSITION_MODE,
     )
 
 if __name__ == '__main__':

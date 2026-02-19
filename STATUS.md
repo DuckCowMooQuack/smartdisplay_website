@@ -27,7 +27,12 @@ Last updated: February 19, 2026
 - Configuration is driven by env vars, not hardcoded values.
 - Weather units displayed in template now track configured units (`F`, `C`, or `K`).
 - Refresh interval is configurable via `SMARTDISPLAY_REFRESH_SECONDS`.
+- Weather refresh interval is independently configurable via `OPENWEATHER_REFRESH_SECONDS`.
 - External image folders are served through `/images/<filename>` route.
+- Layout and transition are configurable via `SMARTDISPLAY_LAYOUT_MODE` and `SMARTDISPLAY_TRANSITION_MODE`.
+- `postcard_drop` transition animates each new photo as a floating/landing postcard.
+- `postcard_drop_topdown` transition animates each photo as if dropped from above onto a flat surface.
+- Drop transitions now keep a short photo stack (two underlays) and animate the new photo on top (from second refresh onward).
 - Overlay text now auto-switches between light and dark themes based on background image brightness.
 - Overlay and filename display styles are tuned for portrait orientation readability on the kiosk display.
 - Mobile viewport behavior is now explicitly pinned (`initial-scale=1`, no user zoom) for consistent kiosk rendering.
@@ -51,7 +56,10 @@ Last updated: February 19, 2026
 3. Configure env:
    - `cp .env.example .env`
    - Set `OPENWEATHER_API_KEY`
+   - Set `OPENWEATHER_REFRESH_SECONDS` (example: `900` for 15-minute weather updates)
    - Set `SMARTDISPLAY_IMAGE_DIR` (example: `/home/pi/mnt/gdrive/smartdisplay_data/images/keep`)
+   - Set `SMARTDISPLAY_LAYOUT_MODE=single`
+   - Set `SMARTDISPLAY_TRANSITION_MODE=postcard_drop_topdown` (or `postcard_drop` / `none`)
 4. Install/refresh service:
    - `sudo cp smartdisplay.service.example /etc/systemd/system/smartdisplay.service`
    - `sudo systemctl daemon-reload`
