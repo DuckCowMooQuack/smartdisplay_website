@@ -2,3 +2,7 @@
 __pycache__/
 *.py[cod]
 *.tar
+google-service-account*.json
+*.pem
+*.key
+*.p12

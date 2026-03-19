@@ -46,7 +46,7 @@ Optional upload + QR:
 Private calendar setup (`service_account` mode):
 
 1. In Google Cloud Console, create a service account and create a JSON key.
-2. Copy the JSON file to the Pi (for example `/home/pi/smartdisplay_website/google-service-account.json`).
+2. Copy the JSON file to the Pi outside the repo tree (for example `/home/pi/smartdisplay_secrets/google-service-account.json`).
 3. In Google Calendar settings for each calendar, share with the service account `client_email` and grant "See all event details".
 4. Set `GOOGLE_CALENDAR_AUTH_MODE=service_account` and `GOOGLE_CALENDAR_SERVICE_ACCOUNT_FILE` in `.env`.
 

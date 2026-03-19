@@ -113,19 +113,6 @@
       );
     }
 
-    body[data-view-mode="ascii_weather"]::before {
-      display: none;
-    }
-
-    body[data-view-mode="ascii_weather"] #photo-underlay-2,
-    body[data-view-mode="ascii_weather"] #photo-underlay-1,
-    body[data-view-mode="ascii_weather"] #photo-layer,
-    body[data-view-mode="ascii_weather"] .overlay-wrap,
-    body[data-view-mode="ascii_weather"] .agenda-wrap,
-    body[data-view-mode="ascii_weather"] .filename-wrap {
-      display: none;
-    }
-
     .overlay-wrap,
     .agenda-wrap,
     .filename-wrap {
@@ -252,12 +239,11 @@
       display: flex;
       flex-direction: column;
       align-items: flex-end;
-      gap: 8px;
+      gap: 14px;
       pointer-events: auto;
     }
 
-    .upload-qr-wrap,
-    .ascii-toggle-wrap {
+    .upload-qr-wrap {
       opacity: 0.08;
       transform: scale(0.96);
       transition: opacity 0.2s ease, transform 0.2s ease;
@@ -267,48 +253,19 @@
       pointer-events: none;
     }
 
-    body[data-show-qr="1"] .upload-qr-wrap,
-    body[data-show-qr="1"] .ascii-toggle-wrap {
+    body[data-show-qr="1"] .upload-qr-wrap {
       opacity: 0.98;
       transform: scale(1);
     }
 
-    .upload-qr-card,
-    .ascii-toggle-btn {
-      width: 114px;
+    .upload-qr-card {
+      width: 124px;
       border-radius: 12px;
       padding: 8px;
       box-sizing: border-box;
       text-align: center;
       background: rgba(0, 0, 0, 0.36);
       border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .ascii-toggle-wrap {
-      pointer-events: none;
-    }
-
-    body[data-show-qr="1"] .ascii-toggle-wrap {
-      pointer-events: auto;
-    }
-
-    .ascii-toggle-btn {
-      display: block;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: inherit;
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      font-size: 0.68em;
-      line-height: 1.2;
-      text-shadow: inherit;
-      cursor: pointer;
-      background: rgba(0, 0, 0, 0.36);
-    }
-
-    .ascii-toggle-btn:focus,
-    .ascii-toggle-btn:active {
-      outline: none;
-      border-color: rgba(255, 255, 255, 0.34);
     }
 
     .upload-qr-card img {
@@ -341,84 +298,181 @@
       border-color: rgba(0, 0, 0, 0.22);
     }
 
-    body[data-text-theme="dark"] .ascii-toggle-btn {
-      background: rgba(255, 255, 255, 0.44);
-      border-color: rgba(0, 0, 0, 0.22);
-      color: rgba(0, 0, 0, 0.84);
-      text-shadow: none;
-    }
-
-    .ascii-weather-view {
+    .easter-egg-layer {
       position: absolute;
       top: 0;
       right: 0;
       bottom: 0;
       left: 0;
-      z-index: 2;
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px 16px;
-      box-sizing: border-box;
-      background: radial-gradient(
-        circle at 50% 22%,
-        rgba(62, 86, 122, 0.74) 0%,
-        rgba(16, 27, 45, 0.9) 55%,
-        rgba(2, 8, 14, 0.98) 100%
-      );
-      text-shadow: none;
-    }
-
-    body[data-view-mode="ascii_weather"] .ascii-weather-view {
-      display: flex;
-    }
-
-    .ascii-weather-card {
-      width: calc(100vw - 24px);
-      max-width: 920px;
-      max-height: calc(100vh - 30px);
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(0, 0, 0, 0.34);
-      box-sizing: border-box;
-      padding: 10px 12px 12px;
+      z-index: 4;
+      pointer-events: none;
       overflow: hidden;
-      display: flex;
-      flex-direction: column;
+      opacity: 0;
+      transition: opacity 0.35s ease;
     }
 
-    .ascii-weather-meta {
+    body[data-easter-egg="1"] .easter-egg-layer {
+      opacity: 1;
+    }
+
+    .easter-egg-layer::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 16%, rgba(255, 212, 80, 0.22), transparent 30%),
+        radial-gradient(circle at 80% 20%, rgba(79, 216, 255, 0.18), transparent 32%),
+        radial-gradient(circle at 52% 78%, rgba(255, 120, 182, 0.16), transparent 34%);
+      opacity: 0.6;
+      animation: easterGlow 2.2s ease-in-out infinite;
+    }
+
+    .easter-egg-particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .easter-egg-particle {
+      position: absolute;
+      left: 0;
+      bottom: -12vh;
+      width: var(--size, 28px);
+      height: var(--size, 28px);
+      border-radius: 999px;
+      background: hsl(var(--hue, 35) 90% 62%);
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.22) inset,
+        0 10px 18px rgba(0, 0, 0, 0.25);
+      transform: translateX(var(--x, 50vw));
+      animation: easterFloat var(--duration, 5.2s) linear var(--delay, 0ms) forwards;
+      opacity: 0;
+    }
+
+    .easter-egg-particle--bubbles {
+      border-radius: 999px;
+      background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.88) 0 24%, hsl(var(--hue, 35) 90% 62%) 55%);
+      box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.22) inset,
+        0 10px 18px rgba(0, 0, 0, 0.25);
+      animation-name: easterFloat;
+    }
+
+    .easter-egg-particle--confetti {
+      border-radius: 4px;
+      width: var(--size, 20px);
+      height: var(--size-y, 12px);
+      background: hsl(var(--hue, 35) 92% 61%);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.18) inset,
+        0 8px 12px rgba(0, 0, 0, 0.22);
+      animation-name: easterConfettiFloat;
+    }
+
+    .easter-egg-particle--twinkle {
+      border-radius: 999px;
+      background: hsl(var(--hue, 35) 98% 72%);
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.45) inset,
+        0 0 14px rgba(255, 255, 255, 0.7);
+      animation-name: easterTwinkleFloat;
+    }
+
+    .easter-egg-message {
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%) scale(0.92);
       text-align: center;
-      margin-bottom: 8px;
-      line-height: 1.25;
+      font-size: 1.1em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-weight: 700;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(0, 0, 0, 0.36);
+      color: #fff;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      opacity: 0;
     }
 
-    .ascii-weather-title {
-      font-size: 0.95em;
-      letter-spacing: 0.02em;
+    body[data-easter-egg="1"] .easter-egg-message {
+      animation: easterPop 0.75s ease-out forwards;
     }
 
-    .ascii-weather-hint {
-      font-size: 0.7em;
-      opacity: 0.8;
-      margin-top: 2px;
+    @keyframes easterFloat {
+      0% {
+        transform: translateX(var(--x, 50vw)) translateY(0) scale(0.72) rotate(0deg);
+        opacity: 0;
+      }
+      12% {
+        opacity: 0.95;
+      }
+      100% {
+        transform: translateX(calc(var(--x, 50vw) + var(--drift, 0px))) translateY(-124vh) scale(1.08) rotate(260deg);
+        opacity: 0;
+      }
     }
 
-    .ascii-weather-scene {
-      margin: 0;
-      font-family: "Courier New", monospace;
-      font-size: 14px;
-      line-height: 1.08;
-      letter-spacing: 0.01em;
-      white-space: pre;
-      color: #e9f1ff;
-      overflow: hidden;
-      text-align: left;
-      user-select: none;
+    @keyframes easterGlow {
+      0%, 100% {
+        opacity: 0.44;
+      }
+      50% {
+        opacity: 0.7;
+      }
     }
 
-    body[data-view-mode="ascii_weather"] .upload-qr-wrap {
-      display: none;
+    @keyframes easterConfettiFloat {
+      0%, 100% {
+        transform: translateX(var(--x, 50vw)) translateY(0) rotate(0deg) scale(0.88);
+        opacity: 0;
+      }
+      12% {
+        opacity: 0.95;
+      }
+      55% {
+        transform: translateX(calc(var(--x, 50vw) + var(--drift-mid, 0px))) translateY(-72vh) rotate(540deg) scale(1.02);
+        opacity: 0.96;
+      }
+      100% {
+        transform: translateX(calc(var(--x, 50vw) + var(--drift, 0px))) translateY(-124vh) rotate(900deg) scale(1.06);
+        opacity: 0;
+      }
+    }
+
+    @keyframes easterTwinkleFloat {
+      0% {
+        transform: translateX(var(--x, 50vw)) translateY(0) scale(0.56) rotate(0deg);
+        opacity: 0;
+      }
+      14% {
+        opacity: 0.95;
+      }
+      45% {
+        transform: translateX(calc(var(--x, 50vw) + var(--drift-near, 0px))) translateY(-54vh) scale(1.24) rotate(180deg);
+        opacity: 0.86;
+      }
+      100% {
+        transform: translateX(calc(var(--x, 50vw) + var(--drift, 0px))) translateY(-120vh) scale(0.48) rotate(420deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes easterPop {
+      0% {
+        transform: translateX(-50%) scale(0.82);
+        opacity: 0;
+      }
+      60% {
+        transform: translateX(-50%) scale(1.06);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.95;
+      }
     }
 
     @media (orientation: portrait) {
@@ -451,17 +505,9 @@
         width: 102px;
       }
 
-      .ascii-toggle-btn {
-        width: 102px;
-      }
-
       .upload-qr-card img {
         width: 84px;
         height: 84px;
-      }
-
-      .ascii-weather-scene {
-        font-size: 11px;
       }
     }
   </style>
@@ -470,23 +516,12 @@
   data-text-theme="light"
   data-show-filename="0"
   data-show-qr="0"
-  data-view-mode="photo"
   data-layout-mode="{{ layout_mode }}"
   data-transition-mode="{{ transition_mode }}"
 >
   <div id="photo-underlay-2"></div>
   <div id="photo-underlay-1"></div>
   <div id="photo-layer"></div>
-
-  <div id="ascii-weather-view" class="ascii-weather-view">
-    <div class="ascii-weather-card">
-      <div class="ascii-weather-meta">
-        <div id="ascii-weather-title" class="ascii-weather-title">ASCII Weather</div>
-        <div id="ascii-weather-hint" class="ascii-weather-hint">Tap to reveal controls, then tap again to switch back.</div>
-      </div>
-      <pre id="ascii-weather-scene" class="ascii-weather-scene"></pre>
-    </div>
-  </div>
 
   <div class="overlay-wrap">
     <div class="overlay">
@@ -497,9 +532,6 @@
   </div>
 
   <div class="corner-controls">
-    <div class="ascii-toggle-wrap">
-      <button id="ascii-weather-toggle" class="ascii-toggle-btn" type="button">ASCII Weather</button>
-    </div>
     {% if upload_qr_data_uri %}
     <div class="upload-qr-wrap">
       <div class="upload-qr-card">
@@ -531,6 +563,11 @@
     <div class="filename">
       {{ image_name if image_name else "No image available" }}
     </div>
+  </div>
+
+  <div id="easter-egg-layer" class="easter-egg-layer" aria-hidden="true">
+    <div id="easter-egg-particles" class="easter-egg-particles"></div>
+    <div id="easter-egg-message" class="easter-egg-message">Surprise Party Mode</div>
   </div>
 
   <script>
@@ -777,9 +814,6 @@
     }
 
     function refreshOverlayPlacementAndTheme(imageUrl) {
-      if (currentViewMode === 'ascii_weather') {
-        return;
-      }
       placeOverlayInTopBlankSpace(imageUrl, function (overlayInTopBlank) {
         applyThemeFromImage(imageUrl, overlayInTopBlank);
       });
@@ -965,12 +999,24 @@
 
     var filenameTimer = null;
     var qrTimer = null;
-    var asciiWeatherAnimationTimer = null;
-    var asciiWeatherFrame = 0;
-    var currentViewMode = 'photo';
-    var VIEW_MODE_STORAGE_KEY = 'smartdisplay_view_mode';
-    var VIEW_MODE_PHOTO = 'photo';
-    var VIEW_MODE_ASCII_WEATHER = 'ascii_weather';
+    var easterEggBurstTimer = null;
+    var easterEggEffectTimer = null;
+    var easterEggInactivityTimer = null;
+    var easterEggResetTimer = null;
+    var easterEggLastInputAt = 0;
+    var easterEggLastTapAt = 0;
+    var easterEggTapStreak = 0;
+    var easterEggCurrentEffect = '';
+    var EASTER_EGG_TAPS_REQUIRED = 7;
+    var EASTER_EGG_QUICK_GAP_MS = 560;
+    var EASTER_EGG_IDLE_TIMEOUT_MS = 1300;
+    var EASTER_EGG_BURST_INTERVAL_MS = 420;
+    var EASTER_EGG_EFFECT_CHANGE_MIN_MS = 1300;
+    var EASTER_EGG_EFFECT_CHANGE_MAX_MS = 2600;
+    var EASTER_EGG_INITIAL_PARTICLES = 18;
+    var EASTER_EGG_BURST_SIZE = 7;
+    var EASTER_EGG_MAX_PARTICLES = 90;
+    var EASTER_EGG_EFFECTS = ['bubbles', 'confetti', 'twinkle'];
 
     function showFilenameTemporarily() {
       document.body.setAttribute('data-show-filename', '1');
@@ -994,265 +1040,220 @@
       }, 8000);
     }
 
-    function normalizeViewMode(viewMode) {
-      if (viewMode === VIEW_MODE_ASCII_WEATHER) {
-        return VIEW_MODE_ASCII_WEATHER;
-      }
-      return VIEW_MODE_PHOTO;
+    function isEasterEggActive() {
+      return document.body.getAttribute('data-easter-egg') === '1';
     }
 
-    function getStoredViewMode() {
-      try {
-        var rawMode = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
-        return normalizeViewMode(rawMode);
-      } catch (err) {
-        return VIEW_MODE_PHOTO;
+    function pickNextEasterEggEffect() {
+      if (!EASTER_EGG_EFFECTS.length) {
+        return '';
       }
-    }
+      if (EASTER_EGG_EFFECTS.length === 1) {
+        return EASTER_EGG_EFFECTS[0];
+      }
 
-    function setStoredViewMode(viewMode) {
-      try {
-        window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, normalizeViewMode(viewMode));
-      } catch (err) {
-        // Ignore storage failures on older browsers.
-      }
-    }
-
-    function classifyWeatherType(description) {
-      var weatherText = String(description || '').toLowerCase();
-      if (weatherText.indexOf('snow') !== -1 || weatherText.indexOf('sleet') !== -1 || weatherText.indexOf('ice') !== -1) {
-        return 'snow';
-      }
-      if (weatherText.indexOf('rain') !== -1 || weatherText.indexOf('drizzle') !== -1) {
-        return 'rain';
-      }
-      if (weatherText.indexOf('thunder') !== -1 || weatherText.indexOf('storm') !== -1) {
-        return 'storm';
-      }
-      if (weatherText.indexOf('cloud') !== -1 || weatherText.indexOf('mist') !== -1 || weatherText.indexOf('fog') !== -1 || weatherText.indexOf('haze') !== -1) {
-        return 'clouds';
-      }
-      if (weatherText.indexOf('clear') !== -1 || weatherText.indexOf('sun') !== -1) {
-        return 'clear';
-      }
-      return 'default';
-    }
-
-    function getAsciiSkyLines(weatherType, frameIndex) {
-      var frame = frameIndex % 2;
-      if (weatherType === 'snow') {
-        if (frame === 0) {
-          return [
-            '   *      *         *       *        *       *    ',
-            '      *       *         *      *         *        ',
-            '   *      .--.       *        .--.        *       ',
-            '      *  (    ).   *       * (    ).   *          ',
-            '   *    (___.__)__)     *    (___.__)__)      *   ',
-            '      *      *      *      *      *       *       '
-          ];
+      var nextEffect = EASTER_EGG_EFFECTS[randomInt(0, EASTER_EGG_EFFECTS.length - 1)];
+      if (nextEffect === easterEggCurrentEffect) {
+        var currentIndex = EASTER_EGG_EFFECTS.indexOf(easterEggCurrentEffect);
+        if (currentIndex < 0) {
+          currentIndex = 0;
         }
-        return [
-          '      *        *      *       *         *       *  ',
-          '   *      *        *      *        *         *     ',
-          '      *    .--.        *      .--.       *         ',
-          '   *      (    ).    *      (    ).    *       *   ',
-          '      *  (___.__)__)    *  (___.__)__)      *      ',
-          '   *       *      *       *      *      *          '
-        ];
+        nextEffect = EASTER_EGG_EFFECTS[(currentIndex + 1 + randomInt(0, EASTER_EGG_EFFECTS.length - 2)) % EASTER_EGG_EFFECTS.length];
       }
-
-      if (weatherType === 'rain') {
-        if (frame === 0) {
-          return [
-            '      .-.        .-.         .-.        .-.        ',
-            '     (   ).     (   ).      (   ).     (   ).      ',
-            '    (___(__)   (___(__)    (___(__)   (___(__)     ',
-            '    // // //   // // //    // // //   // // //     ',
-            '   // // //   // // //    // // //   // // //      ',
-            '   // // //  // // //    // // //   // // //       '
-          ];
-        }
-        return [
-          '        .-.         .-.        .-.         .-.      ',
-          '       (   ).      (   ).     (   ).      (   ).    ',
-          '      (___(__)    (___(__)   (___(__)    (___(__)   ',
-          '      \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    ',
-          '     \\\\ \\\\ \\\\     \\\\ \\\\ \\\\   \\\\ \\\\ \\\\     \\\\ \\\\ \\\\     ',
-          '      \\\\ \\\\ \\\\   \\\\ \\\\ \\\\     \\\\ \\\\ \\\\   \\\\ \\\\ \\\\      '
-        ];
-      }
-
-      if (weatherType === 'storm') {
-        if (frame === 0) {
-          return [
-            '      .-.        .-.        .-.        .-.         ',
-            '     (   ).     (   ).     (   ).     (   ).        ',
-            '    (___(__)   (___(__)   (___(__)   (___(__)       ',
-            '     /// ///    /// ///    /// ///    /// ///       ',
-            '        / /        / /        / /        / /        ',
-            '       /_/        /_/        /_/        /_/         '
-          ];
-        }
-        return [
-          '       .-.         .-.         .-.        .-.        ',
-          '      (   ).      (   ).      (   ).     (   ).      ',
-          '     (___(__)    (___(__)    (___(__)   (___(__)     ',
-          '      \\\\ \\\\ \\\\     \\\\ \\\\ \\\\     \\\\ \\\\ \\\\    \\\\ \\\\ \\\\    ',
-          '         /_/         /_/         /_/        /_/      ',
-          '         \\ \\         \\ \\         \\ \\        \\ \\      '
-        ];
-      }
-
-      if (weatherType === 'clouds') {
-        if (frame === 0) {
-          return [
-            '                 .--.             .--.              ',
-            '              .-(    ).        .-(    ).            ',
-            '             (___.__)__)      (___.__)__)           ',
-            '            .--.      .--.      .--.                ',
-            '         .-(    ). .-(    ). .-(    ).              ',
-            '        (___.__)_)(___.__)_)(___.__)__)             '
-          ];
-        }
-        return [
-          '               .--.             .--.                ',
-          '            .-(    ).        .-(    ).              ',
-          '           (___.__)__)      (___.__)__)             ',
-          '              .--.      .--.      .--.              ',
-          '           .-(    ). .-(    ). .-(    ).            ',
-          '          (___.__)_)(___.__)_)(___.__)__)           '
-        ];
-      }
-
-      if (weatherType === 'clear') {
-        if (frame === 0) {
-          return [
-            '                       \\  |  /                      ',
-            '                     `. \\ | / .`                    ',
-            '                   ---  .-*- .  ---                 ',
-            '                     . / | \\ .                      ',
-            '                       /  |  \\                      ',
-            '                 ~                 ~                '
-          ];
-        }
-        return [
-          '                        \\ | /                       ',
-          '                      `. \\|/ .`                     ',
-          '                    ---  .*.  ---                   ',
-          '                      . /|\\ .                       ',
-          '                        / | \\                       ',
-          '               ~                    ~               '
-        ];
-      }
-
-      return [
-        '                     .--.                           ',
-        '                  .-(    ).                         ',
-        '                 (___.__)__)                        ',
-        '                                                    ',
-        '                 .-.                                ',
-        '                (   )                               '
-      ];
+      return nextEffect;
     }
 
-    function getAsciiHouseLines() {
-      return [
-        '                                                    ',
-        '                      /\\                            ',
-        '                     /  \\                           ',
-        '                    /____\\                          ',
-        '                   /| [] |\\                         ',
-        '                    |    |                          ',
-        '                 ___|_[]_|___                       ',
-        '                |            |                      ',
-        '                |  SMART     |                      ',
-        '                |  HOME      |                      ',
-        '                |____________|                      ',
-        '             ___/_____/\\_____\\___                  ',
-        '            /____________________\\                 ',
-        '          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~             '
-      ];
+    function setEasterEggEffect(effectName) {
+      if (!effectName) {
+        document.body.removeAttribute('data-easter-egg-effect');
+        easterEggCurrentEffect = '';
+        return;
+      }
+      easterEggCurrentEffect = effectName;
+      document.body.setAttribute('data-easter-egg-effect', effectName);
     }
 
-    function renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit) {
-      var titleNode = document.getElementById('ascii-weather-title');
-      var hintNode = document.getElementById('ascii-weather-hint');
-      var sceneNode = document.getElementById('ascii-weather-scene');
-      if (!sceneNode) {
+    function scheduleNextEasterEggEffect() {
+      if (easterEggEffectTimer) {
+        clearTimeout(easterEggEffectTimer);
+      }
+      if (!isEasterEggActive()) {
         return;
       }
 
-      var weatherType = classifyWeatherType(weatherDescription);
-      var skyLines = getAsciiSkyLines(weatherType, asciiWeatherFrame);
-      var houseLines = getAsciiHouseLines();
-      sceneNode.textContent = skyLines.concat(houseLines).join('\n');
-
-      if (titleNode) {
-        var weatherLabel = weatherDescription ? String(weatherDescription) : 'Weather unavailable';
-        var unitLabel = weatherUnit ? String(weatherUnit) : '';
-        var tempLabel = weatherTemp === null || weatherTemp === undefined ? '--' : String(weatherTemp);
-        var tempText = tempLabel === '--' ? '--' : tempLabel + '°' + unitLabel;
-        titleNode.textContent = tempText + ' - ' + weatherLabel;
-      }
-      if (hintNode) {
-        hintNode.textContent = 'Tap once to reveal controls, then tap "Show Photos" to return.';
-      }
+      var delay = randomInt(EASTER_EGG_EFFECT_CHANGE_MIN_MS, EASTER_EGG_EFFECT_CHANGE_MAX_MS);
+      easterEggEffectTimer = setTimeout(function () {
+        if (!isEasterEggActive()) {
+          return;
+        }
+        setEasterEggEffect(pickNextEasterEggEffect());
+        scheduleNextEasterEggEffect();
+      }, delay);
     }
 
-    function startAsciiWeatherAnimation(weatherDescription, weatherTemp, weatherUnit) {
-      stopAsciiWeatherAnimation();
-      asciiWeatherFrame = 0;
-      renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit);
-      asciiWeatherAnimationTimer = setInterval(function () {
-        asciiWeatherFrame = (asciiWeatherFrame + 1) % 2;
-        renderAsciiWeatherScene(weatherDescription, weatherTemp, weatherUnit);
-      }, 1200);
-    }
-
-    function stopAsciiWeatherAnimation() {
-      if (asciiWeatherAnimationTimer) {
-        clearInterval(asciiWeatherAnimationTimer);
-        asciiWeatherAnimationTimer = null;
-      }
-    }
-
-    function updateAsciiToggleButtonLabel(viewMode) {
-      var button = document.getElementById('ascii-weather-toggle');
-      if (!button) {
+    function clearEasterEggParticles() {
+      var particlesNode = document.getElementById('easter-egg-particles');
+      if (!particlesNode) {
         return;
       }
-      if (viewMode === VIEW_MODE_ASCII_WEATHER) {
-        button.textContent = 'Show Photos';
-      } else {
-        button.textContent = 'ASCII Weather';
+      while (particlesNode.firstChild) {
+        particlesNode.removeChild(particlesNode.firstChild);
       }
     }
 
-    function setViewMode(viewMode, options) {
-      var config = options || {};
-      var normalizedMode = normalizeViewMode(viewMode);
-      currentViewMode = normalizedMode;
-      document.body.setAttribute('data-view-mode', normalizedMode);
-      updateAsciiToggleButtonLabel(normalizedMode);
+    function trimEasterEggParticles() {
+      var particlesNode = document.getElementById('easter-egg-particles');
+      if (!particlesNode) {
+        return;
+      }
+      while (particlesNode.children.length > EASTER_EGG_MAX_PARTICLES) {
+        particlesNode.removeChild(particlesNode.firstChild);
+      }
+    }
 
-      if (normalizedMode === VIEW_MODE_ASCII_WEATHER) {
-        if (overlayLayoutTimer) {
-          clearTimeout(overlayLayoutTimer);
-          overlayLayoutTimer = null;
+    function spawnEasterEggParticleBurst(count) {
+      var particlesNode = document.getElementById('easter-egg-particles');
+      if (!particlesNode) {
+        return;
+      }
+
+      var effectName = easterEggCurrentEffect || 'bubbles';
+      var i;
+      for (i = 0; i < count; i += 1) {
+        var particle = document.createElement('div');
+        particle.className = 'easter-egg-particle easter-egg-particle--' + effectName;
+        var size = randomInt(14, 40);
+        var drift = randomInt(-150, 150);
+        var durationTenths = randomInt(34, 64);
+        var startX = randomInt(3, 95);
+
+        if (effectName === 'confetti') {
+          size = randomInt(10, 26);
+          drift = randomInt(-220, 220);
+          durationTenths = randomInt(24, 52);
+        } else if (effectName === 'twinkle') {
+          size = randomInt(10, 22);
+          drift = randomInt(-190, 190);
+          durationTenths = randomInt(28, 54);
         }
-        setTextTheme('light');
-        startAsciiWeatherAnimation(currentWeatherDescription, currentWeatherTemp, currentWeatherTempUnit);
-      } else {
-        stopAsciiWeatherAnimation();
-        queueOverlayPlacementPasses(currentImageUrl);
+
+        particle.style.setProperty('--x', String(startX) + 'vw');
+        particle.style.setProperty('--drift', String(drift) + 'px');
+        particle.style.setProperty('--drift-mid', String(Math.round(drift * 0.65)) + 'px');
+        particle.style.setProperty('--drift-near', String(Math.round(drift * 0.45)) + 'px');
+        particle.style.setProperty('--size', String(size) + 'px');
+        particle.style.setProperty('--size-y', String(Math.max(8, Math.round(size * 0.62))) + 'px');
+        particle.style.setProperty('--hue', String(randomInt(0, 359)));
+        particle.style.setProperty('--duration', String((durationTenths / 10).toFixed(1)) + 's');
+        particle.style.setProperty('--delay', '0ms');
+        particle.addEventListener('animationend', function (event) {
+          var node = event.target;
+          if (node && node.parentNode) {
+            node.parentNode.removeChild(node);
+          }
+        });
+        particlesNode.appendChild(particle);
+      }
+      trimEasterEggParticles();
+    }
+
+    function armEasterEggInactivityTimeout() {
+      if (easterEggInactivityTimer) {
+        clearTimeout(easterEggInactivityTimer);
+      }
+      easterEggInactivityTimer = setTimeout(function () {
+        deactivateEasterEgg();
+      }, EASTER_EGG_IDLE_TIMEOUT_MS);
+    }
+
+    function deactivateEasterEgg() {
+      document.body.removeAttribute('data-easter-egg');
+      document.body.removeAttribute('data-easter-egg-effect');
+      easterEggTapStreak = 0;
+      easterEggCurrentEffect = '';
+      if (easterEggBurstTimer) {
+        clearInterval(easterEggBurstTimer);
+        easterEggBurstTimer = null;
+      }
+      if (easterEggEffectTimer) {
+        clearTimeout(easterEggEffectTimer);
+        easterEggEffectTimer = null;
+      }
+      if (easterEggInactivityTimer) {
+        clearTimeout(easterEggInactivityTimer);
+        easterEggInactivityTimer = null;
+      }
+      if (easterEggResetTimer) {
+        clearTimeout(easterEggResetTimer);
+      }
+      easterEggResetTimer = setTimeout(function () {
+        clearEasterEggParticles();
+        easterEggResetTimer = null;
+      }, 500);
+    }
+
+    function activateEasterEgg() {
+      var messageNode = document.getElementById('easter-egg-message');
+      var messages = ['Surprise Party Mode', 'Color Pop', 'Dance Time'];
+      if (messageNode) {
+        messageNode.textContent = messages[randomInt(0, messages.length - 1)];
       }
 
-      if (!config.skipPersist) {
-        setStoredViewMode(normalizedMode);
+      document.body.setAttribute('data-easter-egg', '1');
+      setEasterEggEffect(pickNextEasterEggEffect());
+      clearEasterEggParticles();
+      spawnEasterEggParticleBurst(EASTER_EGG_INITIAL_PARTICLES);
+
+      if (easterEggBurstTimer) {
+        clearInterval(easterEggBurstTimer);
+      }
+      easterEggBurstTimer = setInterval(function () {
+        if (!isEasterEggActive()) {
+          return;
+        }
+        spawnEasterEggParticleBurst(EASTER_EGG_BURST_SIZE);
+      }, EASTER_EGG_BURST_INTERVAL_MS);
+      scheduleNextEasterEggEffect();
+      armEasterEggInactivityTimeout();
+    }
+
+    function registerEasterEggTap() {
+      var now = Date.now();
+      if (now - easterEggLastInputAt < 220) {
+        return;
+      }
+      easterEggLastInputAt = now;
+      var gap = easterEggLastTapAt ? now - easterEggLastTapAt : (EASTER_EGG_QUICK_GAP_MS + 1);
+      var isQuickTap = gap <= EASTER_EGG_QUICK_GAP_MS;
+      easterEggLastTapAt = now;
+
+      if (isQuickTap) {
+        easterEggTapStreak += 1;
+      } else {
+        easterEggTapStreak = 1;
+      }
+
+      if (isEasterEggActive()) {
+        if (!isQuickTap) {
+          deactivateEasterEgg();
+          return;
+        }
+        if (randomInt(0, 3) === 0) {
+          setEasterEggEffect(pickNextEasterEggEffect());
+          scheduleNextEasterEggEffect();
+        }
+        armEasterEggInactivityTimeout();
+        return;
+      }
+
+      if (easterEggTapStreak >= EASTER_EGG_TAPS_REQUIRED) {
+        activateEasterEgg();
       }
     }
+
 
     function showTransientOverlayDetails() {
+      registerEasterEggTap();
       showFilenameTemporarily();
       showQrTemporarily();
     }
@@ -1260,27 +1261,18 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    var currentWeatherDescription = {{ description | tojson }};
-    var currentWeatherTemp = {{ temp | tojson }};
-    var currentWeatherTempUnit = {{ temp_unit | tojson }};
     var currentImageUrl = {{ image_url | tojson }};
     var transitionMode = {{ transition_mode | tojson }};
     var photoState = initializePhotoLayers(currentImageUrl);
 
-    var initialViewMode = getStoredViewMode();
-    setViewMode(initialViewMode, { skipPersist: true });
-    if (currentViewMode === VIEW_MODE_PHOTO) {
-      if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
-        runPostcardDropTransition(currentImageUrl);
-      } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
-        runPostcardTopdownTransition(currentImageUrl);
-      }
+    queueOverlayPlacementPasses(currentImageUrl);
+    if (transitionMode === 'postcard_drop' && photoState.hasCurrentImage) {
+      runPostcardDropTransition(currentImageUrl);
+    } else if (transitionMode === 'postcard_drop_topdown' && photoState.hasCurrentImage) {
+      runPostcardTopdownTransition(currentImageUrl);
     }
 
     window.addEventListener('resize', function () {
-      if (currentViewMode !== VIEW_MODE_PHOTO) {
-        return;
-      }
       if (overlayLayoutTimer) {
         clearTimeout(overlayLayoutTimer);
       }
@@ -1288,22 +1280,6 @@
         queueOverlayPlacementPasses(currentImageUrl);
       }, 120);
     });
-
-    var asciiToggleButton = document.getElementById('ascii-weather-toggle');
-    if (asciiToggleButton) {
-      asciiToggleButton.addEventListener('click', function (event) {
-        if (event) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        if (currentViewMode === VIEW_MODE_ASCII_WEATHER) {
-          setViewMode(VIEW_MODE_PHOTO);
-        } else {
-          setViewMode(VIEW_MODE_ASCII_WEATHER);
-        }
-        showTransientOverlayDetails();
-      }, false);
-    }
 
     document.body.addEventListener('click', showTransientOverlayDetails, false);
     document.body.addEventListener('touchstart', showTransientOverlayDetails, false);
