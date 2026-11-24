@@ -111,6 +111,13 @@ SMARTDISPLAY_SCENE_TOKEN = os.getenv("SMARTDISPLAY_SCENE_TOKEN", "").strip()
 
 SCENE_LOCK = threading.Lock()
 SCENE_STATE = {"scene": None, "started_at": None, "ends_at": None, "id": None}
+SCENES = {
+    "christmas": ("Winter Night", "An ASCII snowy pine forest with a glowing campfire.", "christmas.js"),
+    "snowman_party": ("Snowman Dance Party", "Dancing ASCII snowmen around a colorful Christmas tree.", "festive.js"),
+    "christmas_village": ("Christmas Village Light Show", "An ASCII village with chasing Christmas lights and a present train.", "festive.js"),
+    "dancing_trees": ("Dancing Christmas Trees", "Bouncing ASCII Christmas trees with sparkling lights and hopping presents.", "festive.js"),
+    "santa_sleigh": ("Santa's Sleigh Ride", "An ASCII Santa and reindeer flying over snowy Christmas rooftops.", "festive.js"),
+}
 
 
 def current_scene():
@@ -133,8 +140,8 @@ def scene_control():
         if not secrets.compare_digest(authorization, "Bearer " + SMARTDISPLAY_SCENE_TOKEN):
             return {"error": "Unauthorized"}, 401
         payload = request.get_json(silent=True)
-        if not isinstance(payload, dict) or payload.get("scene") not in ("christmas", "off"):
-            return {"error": "scene must be christmas or off"}, 400
+        if not isinstance(payload, dict) or payload.get("scene") not in (*SCENES, "off"):
+            return {"error": "Unknown scene", "scenes": list(SCENES)}, 400
         duration = payload.get("duration", 241)
         if isinstance(duration, bool) or not isinstance(duration, (int, float)) or not 1 <= duration <= 3600:
             return {"error": "duration must be between 1 and 3600 seconds"}, 400
@@ -143,7 +150,7 @@ def scene_control():
             if payload["scene"] == "off":
                 SCENE_STATE.update(scene=None, started_at=None, ends_at=None, id=None)
             else:
-                SCENE_STATE.update(scene="christmas", started_at=now, ends_at=now + duration, id=uuid4().hex)
+                SCENE_STATE.update(scene=payload["scene"], started_at=now, ends_at=now + duration, id=uuid4().hex)
             state = dict(SCENE_STATE)
             state["server_time"] = now
         response = app.json.response(state)
@@ -151,9 +158,15 @@ def scene_control():
     return response
 
 
-@app.route("/scenes/christmas")
-def christmas_scene():
-    return render_template("christmas.html")
+@app.route("/scenes/<scene_name>")
+def christmas_scene(scene_name):
+    if scene_name not in SCENES:
+        abort(404)
+    title, description, script = SCENES[scene_name]
+    return render_template(
+        "christmas.html", scene_name=scene_name, scene_title=title,
+        scene_description=description, scene_script=script, scenes=SCENES,
+    )
 
 MAX_UPLOAD_BYTES = SMARTDISPLAY_MAX_UPLOAD_MB * 1024 * 1024
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES

@@ -4,6 +4,13 @@
   var script = document.querySelector('script[data-refresh-seconds]');
   var refreshSeconds = Number(script.getAttribute('data-refresh-seconds'));
   var activeId = null, dismissedId = null, frame = null, endTimer = null, refreshTimer;
+  var scenes = {
+    christmas: 'Christmas winter forest',
+    snowman_party: 'Snowman dance party',
+    christmas_village: 'Christmas village light show',
+    dancing_trees: 'Dancing Christmas trees',
+    santa_sleigh: "Santa's sleigh ride"
+  };
   function scheduleRefresh() {
     clearTimeout(refreshTimer);
     if (refreshSeconds > 0) refreshTimer = setTimeout(function () {
@@ -26,7 +33,7 @@
       var state;
       try { state = JSON.parse(xhr.responseText); } catch (error) { return; }
       var remaining = (state.ends_at - state.server_time) * 1000;
-      if (state.scene !== 'christmas' || remaining <= 0) {
+      if (!Object.prototype.hasOwnProperty.call(scenes, state.scene) || remaining <= 0) {
         if (frame) stop();
         return;
       }
@@ -34,8 +41,8 @@
       if (frame) stop();
       activeId = state.id;
       frame = document.createElement('iframe');
-      frame.title = 'Christmas winter forest';
-      frame.src = '/scenes/christmas';
+      frame.title = scenes[state.scene];
+      frame.src = '/scenes/' + state.scene;
       frame.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;border:0;z-index:9999;background:#020609;';
       document.body.appendChild(frame);
       clearTimeout(refreshTimer);

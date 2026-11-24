@@ -14,8 +14,26 @@ class SceneControlTests(unittest.TestCase):
             display.SCENE_STATE.update(scene=None, started_at=None, ends_at=None, id=None)
         self.headers = {'Authorization': 'Bearer test-scene-token'}
 
-    def play(self, **payload):
-        return self.client.post('/api/scene', json=dict(scene='christmas', **payload), headers=self.headers)
+    def play(self, scene='christmas', **payload):
+        return self.client.post('/api/scene', json=dict(scene=scene, **payload), headers=self.headers)
+
+    def test_each_scene_has_a_preview_and_can_replace_playback(self):
+        previous_id = None
+        for scene in display.SCENES:
+            with self.subTest(scene=scene):
+                page = self.client.get('/scenes/' + scene)
+                self.assertEqual(page.status_code, 200)
+                self.assertIn(('data-scene="' + scene + '"').encode(), page.data)
+                duration = 192 if scene == 'christmas' else 241
+                state = self.play(scene=scene, duration=duration).get_json()
+                self.assertEqual(state['scene'], scene)
+                self.assertEqual(state['ends_at'] - state['started_at'], duration)
+                self.assertNotEqual(state['id'], previous_id)
+                self.assertEqual(self.client.get('/api/scene').get_json()['scene'], scene)
+                previous_id = state['id']
+
+    def test_unknown_scene_preview_is_not_found(self):
+        self.assertEqual(self.client.get('/scenes/not-a-scene').status_code, 404)
 
     def test_control_requires_token_but_status_and_preview_are_public(self):
         self.assertEqual(self.client.post('/api/scene', json={'scene': 'christmas'}).status_code, 401)

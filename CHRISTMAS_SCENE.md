@@ -1,44 +1,61 @@
-# ASCII winter night
+# ASCII Christmas scenes
 
-Open `/scenes/christmas` for a continuous preview of the snowy pine forest and
-campfire. All scenery uses ASCII glyphs rendered on a canvas. Snow, fire, embers,
-and tree lights animate at 15 fps without downloading assets. Tap for Pause or
-Photos. The scene fits portrait and landscape displays and honors reduced motion.
+The daily **Turn on Christmas lights** automation randomly selects one of five
+scenes. Each has an equal 20% chance on each run; repeats are possible. The scene
+is selected once and its matching song and duration are used together:
 
-The normal `/` photo page polls `/api/scene` once per second. Home Assistant can
-trigger a full-screen overlay without needing to control or navigate the kiosk.
-Photo refresh pauses for the scene and resumes afterward. Reloading the photo page
-resumes any active scene for its remaining duration; restarting the Python service
-clears active playback. Playback state is held by the single service process.
+| Scene ID | Preview | Alexa song | Duration |
+| --- | --- | --- | --- |
+| `christmas` | `/scenes/christmas` | The Christmas Song (Merry Christmas to You), Nat King Cole | 192 seconds (3:12) |
+| `snowman_party` | `/scenes/snowman_party` | All I Want for Christmas Is You, Mariah Carey | 241 seconds (4:01) |
+| `christmas_village` | `/scenes/christmas_village` | Mariah Carey | 241 seconds |
+| `dancing_trees` | `/scenes/dancing_trees` | Mariah Carey | 241 seconds |
+| `santa_sleigh` | `/scenes/santa_sleigh` | Mariah Carey | 241 seconds |
 
-Configure `SMARTDISPLAY_SCENE_TOKEN` in the Pi's private `.env`, restart
-`smartdisplay.service`, and use the same token in HA's private secrets:
+The four upbeat scenes use dancing snowmen, chasing village lights and a present
+train, swaying trees and hopping gifts, or a flying sleigh over scrolling rooftops.
+The quiet forest and campfire is preserved for Nat King Cole. Art uses ASCII glyphs
+on a canvas at 15 fps, with no external assets or audio downloads. Character shapes
+keep their physical proportions on portrait displays. Standalone previews play
+continuously and include a scene picker; they do not start music or change HA.
+Tap for Pause or Photos. Reduced-motion preferences are honored.
 
-```yaml
-smartdisplay_scene_authorization: "Bearer YOUR_SHARED_TOKEN"
-```
+The normal `/` photo page polls `/api/scene` once per second. HA can trigger a
+full-screen overlay without controlling the kiosk browser. Photo refresh pauses
+until expiry, then resumes. Reloading the page resumes an active scene for its
+remaining duration; restarting the Python service clears playback. State is held
+by the single service process. The local expiry timer works if the network fails.
 
-The connected HA repo tracks the REST commands in
-`packages/smartdisplay_christmas.yaml` and the updated **Turn on Christmas lights**
-automation. It starts the scene and the existing Alexa music request in parallel.
-The duration is 241 seconds (4:01), matching the standard recording of Mariah
-Carey's All I Want for Christmas Is You. Alexa startup latency may shift their
-actual alignment slightly. Music continues to be handled by Alexa.
+Configure `SMARTDISPLAY_SCENE_TOKEN` in the Pi's private `.env` and the same token
+in HA's private secrets as `smartdisplay_scene_authorization: "Bearer TOKEN"`.
+Do not commit either token. Empty Pi tokens disable write access; no credentials
+are sent to the browser.
 
 API:
 
-- `GET /api/scene`: public playback status, with server time to avoid kiosk clock skew.
-- `POST /api/scene`: `Authorization: Bearer TOKEN`, JSON
-  `{"scene":"christmas","duration":241}`. Duration must be 1–3600 seconds.
-- Stop early with `{"scene":"off"}`. Each play request starts a new playback.
-- Empty configured tokens disable write access. Tokens are never sent to the browser.
+- `GET /api/scene`: public status and server time, avoiding kiosk clock skew.
+- `POST /api/scene`: bearer auth and JSON `{"scene":"snowman_party","duration":241}`.
+  The scene must be one of the five IDs above; duration must be 1–3600 seconds.
+- `{"scene":"off"}` stops playback. Each start creates a new playback ID.
+- A start with no duration defaults to 241 seconds for backward compatibility;
+  the HA automation always supplies the duration matching its selected song.
+
+HA configuration lives in the connected ha_scripts_and_config repository:
+`automations.yaml` and `packages/smartdisplay_christmas.yaml`. It preserves the
+existing lights, sunset trigger, Alexa entity and everywhere group. Scene and
+music actions start in parallel. A scene connection failure does not stop music.
+Alexa startup latency and recording selection can vary, so this is a timed display
+rather than synchronization with an observed playback position.
 
 Deployment files: `smartdisplay.py`, `templates/index.html`,
-`templates/christmas.html`, `static/christmas.js`, `static/scene-player.js`.
-Back up the Pi's app and `.env` before copying. Existing dependencies suffice.
-Restart the service, then refresh the kiosk once to load the polling script.
-The old photo page also refreshes itself at the existing configured interval.
+`templates/christmas.html`, `static/christmas.js`, `static/festive.js`, and
+`static/scene-player.js`. Back up the Pi app before copying; preserve `.env`.
+Restart `smartdisplay.service` and let the kiosk photo page refresh once.
+Scene and polling asset URLs carry a version to avoid stale cached scripts.
+No new runtime dependencies are required.
 
-Run API checks with `python3 -m unittest discover -s tests -v` using the app's
-installed dependencies. Browser checks should cover portrait/landscape, motion,
-pause, trigger, replay, expiry, dismissal, and photo refresh suppression.
+Run API tests with `python3 -m unittest discover -s tests -v`. Browser checks cover
+all five scenes at portrait/landscape sizes, motion, pause, switching, expiry,
+photo refresh suppression, and dismissal. HA tests check every possible random
+selection for the right song and payload. Run `ha core check` before applying HA
+changes, then reload REST commands and automations; no new integration is needed.

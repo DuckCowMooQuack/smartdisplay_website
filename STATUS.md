@@ -2,17 +2,20 @@
 
 Last updated: November 24, 2026
 
-## Christmas Scene
+## Christmas Scenes
 
 - `/scenes/christmas` previews an animated ASCII snowy pine forest and campfire.
+- Four upbeat previews: `/scenes/snowman_party`, `/scenes/christmas_village`,
+  `/scenes/dancing_trees`, and `/scenes/santa_sleigh`.
 - Portrait composition sizes the forest from screen width and compensates for
   character-cell proportions, keeping trees and fire from looking stretched.
 - The photo page polls `/api/scene` and displays requested scenes full-screen,
   suspending photo refresh until playback expires.
-- Token-authenticated scene control defaults to 241 seconds (4:01), matching
-  Mariah Carey's All I Want for Christmas Is You. Photos resume automatically.
-- The connected HA repo contains the REST commands and a parallel scene/music
-  action in the existing Turn on Christmas lights automation.
+- HA randomly selects one of all five scenes per run, with equal chances.
+  The campfire gets Nat King Cole (192 seconds); upbeat scenes get Mariah Carey
+  (241 seconds). Photos resume automatically. Selection can repeat on later runs.
+- The connected HA repo contains the parameterized REST commands and parallel
+  scene/music actions in the existing Turn on Christmas lights automation.
 - See `CHRISTMAS_SCENE.md` for API, token setup, deployment, and validation notes.
 
 ## Current State
