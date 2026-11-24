@@ -1,6 +1,17 @@
 # Smart Display Status
 
-Last updated: February 19, 2026 (evening)
+Last updated: November 24, 2026
+
+## Christmas Scene
+
+- `/scenes/christmas` previews an animated ASCII snowy pine forest and campfire.
+- The photo page polls `/api/scene` and displays requested scenes full-screen,
+  suspending photo refresh until playback expires.
+- Token-authenticated scene control defaults to 241 seconds (4:01), matching
+  Mariah Carey's All I Want for Christmas Is You. Photos resume automatically.
+- The connected HA repo contains the REST commands and a parallel scene/music
+  action in the existing Turn on Christmas lights automation.
+- See `CHRISTMAS_SCENE.md` for API, token setup, deployment, and validation notes.
 
 ## Current State
 

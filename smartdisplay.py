@@ -5,6 +5,7 @@ import io
 import json
 import os
 import random
+import secrets
 import threading
 import time
 from urllib.parse import quote, urlencode, urlsplit
@@ -15,6 +16,7 @@ from dotenv import load_dotenv
 from flask import Flask, abort, render_template, request, send_from_directory, url_for
 from qrcode.image.svg import SvgPathImage
 from werkzeug.utils import secure_filename
+from uuid import uuid4
 
 app = Flask(__name__)
 load_dotenv()
@@ -105,6 +107,53 @@ SMARTDISPLAY_SHOW_UPLOAD_QR = env_bool("SMARTDISPLAY_SHOW_UPLOAD_QR", True)
 SMARTDISPLAY_MAX_UPLOAD_MB = max(1, env_int("SMARTDISPLAY_MAX_UPLOAD_MB", 20))
 HOST = os.getenv("SMARTDISPLAY_HOST", "0.0.0.0")
 PORT = env_int("SMARTDISPLAY_PORT", 5000)
+SMARTDISPLAY_SCENE_TOKEN = os.getenv("SMARTDISPLAY_SCENE_TOKEN", "").strip()
+
+SCENE_LOCK = threading.Lock()
+SCENE_STATE = {"scene": None, "started_at": None, "ends_at": None, "id": None}
+
+
+def current_scene():
+    with SCENE_LOCK:
+        if SCENE_STATE["ends_at"] and time.time() >= SCENE_STATE["ends_at"]:
+            SCENE_STATE.update(scene=None, started_at=None, ends_at=None, id=None)
+        state = dict(SCENE_STATE)
+        state["server_time"] = time.time()
+        return state
+
+
+@app.route("/api/scene", methods=["GET", "POST"])
+def scene_control():
+    if request.method == "GET":
+        response = app.json.response(current_scene())
+    else:
+        if not SMARTDISPLAY_SCENE_TOKEN:
+            return {"error": "Set SMARTDISPLAY_SCENE_TOKEN to enable scene control"}, 503
+        authorization = request.headers.get("Authorization", "")
+        if not secrets.compare_digest(authorization, "Bearer " + SMARTDISPLAY_SCENE_TOKEN):
+            return {"error": "Unauthorized"}, 401
+        payload = request.get_json(silent=True)
+        if not isinstance(payload, dict) or payload.get("scene") not in ("christmas", "off"):
+            return {"error": "scene must be christmas or off"}, 400
+        duration = payload.get("duration", 241)
+        if isinstance(duration, bool) or not isinstance(duration, (int, float)) or not 1 <= duration <= 3600:
+            return {"error": "duration must be between 1 and 3600 seconds"}, 400
+        now = time.time()
+        with SCENE_LOCK:
+            if payload["scene"] == "off":
+                SCENE_STATE.update(scene=None, started_at=None, ends_at=None, id=None)
+            else:
+                SCENE_STATE.update(scene="christmas", started_at=now, ends_at=now + duration, id=uuid4().hex)
+            state = dict(SCENE_STATE)
+            state["server_time"] = now
+        response = app.json.response(state)
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route("/scenes/christmas")
+def christmas_scene():
+    return render_template("christmas.html")
 
 MAX_UPLOAD_BYTES = SMARTDISPLAY_MAX_UPLOAD_MB * 1024 * 1024
 app.config["MAX_CONTENT_LENGTH"] = MAX_UPLOAD_BYTES
