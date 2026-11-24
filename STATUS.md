@@ -5,6 +5,8 @@ Last updated: November 24, 2026
 ## Christmas Scene
 
 - `/scenes/christmas` previews an animated ASCII snowy pine forest and campfire.
+- Portrait composition sizes the forest from screen width and compensates for
+  character-cell proportions, keeping trees and fire from looking stretched.
 - The photo page polls `/api/scene` and displays requested scenes full-screen,
   suspending photo refresh until playback expires.
 - Token-authenticated scene control defaults to 241 seconds (4:01), matching

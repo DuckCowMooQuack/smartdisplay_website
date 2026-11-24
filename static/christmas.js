@@ -7,7 +7,7 @@
   var groundLight = document.createElement('canvas');
   var base = forest.getContext('2d');
   var glow = groundLight.getContext('2d');
-  var width, height, font, cw, ch, cols, rows, fireX, fireY;
+  var width, height, font, cw, ch, cols, rows, sceneRows, sceneTop, fireX, fireY;
   var snow = [], lights = [], sparks = [];
   var paused = false, last = 0, elapsed = 0, controlTimer;
   var embedded = window.parent !== window;
@@ -31,6 +31,11 @@
     ch = font * 1.18;
     cols = Math.ceil(width / cw);
     rows = Math.ceil(height / ch);
+    // Size the clearing from the shorter dimension instead of stretching its
+    // depth to fill a tall screen. Extra portrait space becomes sky/foreground.
+    sceneRows = Math.min(rows, width * 1.1 / ch);
+    sceneTop = (rows - sceneRows) * 0.45;
+    function sceneY(fraction) { return sceneTop + sceneRows * fraction; }
     // CSS pixels keep this light enough for the Pi and older Android kiosks.
     canvas.width = forest.width = groundLight.width = width;
     canvas.height = forest.height = groundLight.height = height;
@@ -42,7 +47,7 @@
     base.fillRect(0, 0, width, height);
     lights = []; snow = []; sparks = [];
     fireX = cols * 0.5;
-    fireY = rows * 0.87;
+    fireY = sceneY(0.87);
 
     // Distant stars and a small moon, leaving a dark opening above the clearing.
     for (var s = 0; s < cols * rows / 80; s++) {
@@ -53,12 +58,13 @@
     put(base, cols * 0.72, rows * 0.12 + 2, " `--' ", '#7d9388');
 
     // Snow-covered ground: the spacing expands toward the viewer.
-    for (var y = Math.floor(rows * 0.58); y < rows; y++) {
-      var depth = (y / rows - 0.58) / 0.42;
+    var horizon = sceneY(0.58);
+    for (var y = Math.floor(horizon); y < rows; y++) {
+      var depth = (y - horizon) / (rows - horizon);
       for (var x = 0; x < cols; x++) {
         if (random() < 0.24 + depth * 0.25) {
           var dx = (x - fireX) / (cols * 0.4);
-          var dy = (y - fireY) / (rows * 0.22);
+          var dy = (y - fireY) / (sceneRows * 0.22);
           var heat = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy));
           var glyph = random() < 0.66 ? (depth > 0.6 ? '=' : '_') : '.';
           put(base, x, y, glyph, palette[Math.min(4, Math.floor(depth * 3) + 1)]);
@@ -68,7 +74,9 @@
     }
     function tree(cx, bottom, tall, near, decorated) {
       var top = bottom - tall;
-      var half = tall * 0.27;
+      // Character cells are almost twice as tall as wide. Compensate so a pine
+      // has the same natural silhouette in either screen orientation.
+      var half = tall * 0.27 * ch / cw;
       // Paint a silhouette first so distant trees stay behind the branches.
       base.fillStyle = '#020609';
       base.beginPath();
@@ -101,7 +109,7 @@
     }
     // Back-to-front layers make a clearing framed by towering, close pines.
     for (var i = 0; i < 16; i++) {
-      tree(cols * (0.12 + i * 0.051), rows * (0.61 + random() * 0.06), rows * (0.19 + random() * 0.17), 0.12, false);
+      tree(cols * (0.12 + i * 0.051), sceneY(0.61 + random() * 0.06), sceneRows * (0.19 + random() * 0.17), 0.12, false);
     }
     [
       [0.13, 0.78, 0.64, 0.42], [0.89, 0.77, 0.70, 0.46],
@@ -109,7 +117,7 @@
       [0.07, 0.92, 0.95, 0.80], [0.97, 0.94, 0.99, 0.84],
       [0.19, 0.87, 0.68, 0.70], [0.85, 0.88, 0.75, 0.75],
       [-0.02, 1.02, 1.18, 1], [1.06, 1.03, 1.20, 1]
-    ].forEach(function (p) { tree(cols * p[0], rows * p[1], rows * p[2], p[3], true); });
+    ].forEach(function (p) { tree(cols * p[0], sceneY(p[1]), sceneRows * p[2], p[3], true); });
 
     // Fire ring and crossed logs.
     for (i = 0; i < 30; i++) {
@@ -140,7 +148,7 @@
     });
     ctx.globalAlpha = 1;
     // A character-cell flame field, tapered and curled by low-frequency wind.
-    var flameHeight = Math.max(8, Math.min(15, rows * 0.15));
+    var flameHeight = Math.max(8, Math.min(12, sceneRows * 0.15));
     for (var y = 0; y < flameHeight; y++) {
       var f = y / flameHeight;
       var center = Math.sin(elapsed * 2.3 + f * 4) * (f * 2.2);
