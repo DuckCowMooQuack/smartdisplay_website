@@ -24,7 +24,7 @@ class SceneControlTests(unittest.TestCase):
                 page = self.client.get('/scenes/' + scene)
                 self.assertEqual(page.status_code, 200)
                 self.assertIn(('data-scene="' + scene + '"').encode(), page.data)
-                duration = 192 if scene == 'christmas' else 241
+                duration = 192 if scene in ('christmas', 'fireplace_room', 'candlelit_window') else 241
                 state = self.play(scene=scene, duration=duration).get_json()
                 self.assertEqual(state['scene'], scene)
                 self.assertEqual(state['ends_at'] - state['started_at'], duration)

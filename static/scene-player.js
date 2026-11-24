@@ -9,7 +9,9 @@
     snowman_party: 'Snowman dance party',
     christmas_village: 'Christmas village light show',
     dancing_trees: 'Dancing Christmas trees',
-    santa_sleigh: "Santa's sleigh ride"
+    santa_sleigh: "Santa's sleigh ride",
+    fireplace_room: 'Cozy fireplace room',
+    candlelit_window: 'Candlelit winter window'
   };
   function scheduleRefresh() {
     clearTimeout(refreshTimer);

@@ -7,13 +7,14 @@ Last updated: November 24, 2026
 - `/scenes/christmas` previews an animated ASCII snowy pine forest and campfire.
 - Four upbeat previews: `/scenes/snowman_party`, `/scenes/christmas_village`,
   `/scenes/dancing_trees`, and `/scenes/santa_sleigh`.
-- Upbeat scenes have no on-screen title text.
+- No scenes have on-screen title text. Nat King Cole also has two calm previews:
+  `/scenes/fireplace_room` and `/scenes/candlelit_window`.
 - Portrait composition sizes the forest from screen width and compensates for
   character-cell proportions, keeping trees and fire from looking stretched.
 - The photo page polls `/api/scene` and displays requested scenes full-screen,
   suspending photo refresh until playback expires.
-- HA randomly selects one of all five scenes per run, with equal chances.
-  The campfire gets Nat King Cole (192 seconds); upbeat scenes get Mariah Carey
+- HA randomly selects one of all seven scenes per run, with equal chances.
+  The campfire and two cozy interiors get Nat King Cole (192 seconds); upbeat scenes get Mariah Carey
   (241 seconds). Photos resume automatically. Selection can repeat on later runs.
 - The connected HA repo contains the parameterized REST commands and parallel
   scene/music actions in the existing Turn on Christmas lights automation.

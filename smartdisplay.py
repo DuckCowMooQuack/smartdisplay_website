@@ -117,6 +117,8 @@ SCENES = {
     "christmas_village": ("Christmas Village Light Show", "An ASCII village with chasing Christmas lights and a present train.", "festive.js"),
     "dancing_trees": ("Dancing Christmas Trees", "Bouncing ASCII Christmas trees with sparkling lights and hopping presents.", "festive.js"),
     "santa_sleigh": ("Santa's Sleigh Ride", "An ASCII Santa and reindeer flying over snowy Christmas rooftops.", "festive.js"),
+    "fireplace_room": ("Cozy Fireplace Room", "A quiet ASCII fireplace with stockings, candles, and a gently twinkling tree.", "cozy.js"),
+    "candlelit_window": ("Candlelit Winter Window", "An ASCII candlelit window with falling snow and steaming cocoa.", "cozy.js"),
 }
 
 
