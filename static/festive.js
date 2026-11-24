@@ -122,7 +122,6 @@
     ctx.restore();
   }
   function party() {
-    center('SNOW MUCH FUN', h * 0.12, gold, 22);
     center('*  *  *', h * 0.12 + 35, '#94b4cd', 17);
     tree(w * 0.5, ground - 175, 1.13, 1, false);
     candyCane(w * 0.08, ground + 12, 1.05);
@@ -158,7 +157,6 @@
     for (i = 0; i < 4; i++) text(i % 2 ? '.' : 'o', x + 20 - i * 11, y - 20 - ((time * 20 + i * 14) % 70), '#87a3b2', 18);
   }
   function village() {
-    center('LET IT GLOW', h * 0.12, gold, 22);
     for (var i = 0; i < 7; i++) house(w * (i / 6), ground - 150, 0.58, '#446376', i);
     house(w * 0.17, ground + 28, 1.06, '#7f9bba', 1);
     house(w * 0.83, ground + 28, 1.06, '#a98b9e', 3);
@@ -168,7 +166,6 @@
     train();
   }
   function dancingTrees() {
-    center('ROCKIN\' AROUND', h * 0.12, gold, 22);
     tree(w * 0.31, ground - 170, 0.83, 0, true);
     tree(w * 0.69, ground - 170, 0.83, 2, true);
     tree(w * 0.18, ground + 65, 0.95, 0.5, true);
@@ -184,7 +181,6 @@
     text('*', x + 1, y + 39, '#ff797d', 18);
   }
   function sleigh() {
-    center('HERE COMES SANTA', h * 0.10, gold, 22);
     // Scrolling rooftops make the flight feel continuous without losing Santa
     // off the edges of a narrow portrait screen.
     for (var i = -1; i < Math.ceil(w / 180) + 1; i++) {

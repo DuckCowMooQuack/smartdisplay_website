@@ -7,6 +7,7 @@ Last updated: November 24, 2026
 - `/scenes/christmas` previews an animated ASCII snowy pine forest and campfire.
 - Four upbeat previews: `/scenes/snowman_party`, `/scenes/christmas_village`,
   `/scenes/dancing_trees`, and `/scenes/santa_sleigh`.
+- Upbeat scenes have no on-screen title text.
 - Portrait composition sizes the forest from screen width and compensates for
   character-cell proportions, keeping trees and fire from looking stretched.
 - The photo page polls `/api/scene` and displays requested scenes full-screen,
